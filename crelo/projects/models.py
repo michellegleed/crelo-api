@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
 
 class ProjectCategory(models.Model):
@@ -18,7 +19,12 @@ class Project(models.Model):
     image = models.URLField()
     is_open = models.BooleanField()
     date_created = models.DateTimeField(auto_now_add=True)
-    creator = models.CharField(max_length=200)
+    # creator = models.CharField(max_length=200)
+    creator = models.ForeignKey(
+        get_user_model(), 
+        on_delete=models.CASCADE, 
+        related_name='user_projects'
+    )
     due_date = models.DateTimeField()
     category = models.ForeignKey('ProjectCategory', on_delete=models.PROTECT)
     location = models.ForeignKey('Location', on_delete=models.CASCADE)
@@ -27,29 +33,47 @@ class Pledge(models.Model):
     amount = models.IntegerField()
     comment = models.CharField(max_length=200)
     anonymous = models.BooleanField()
-    project = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='pledges')
+    project = models.ForeignKey(
+        'Project', 
+        on_delete=models.CASCADE, 
+        related_name='pledges'
+    )
     date_created = models.DateTimeField(auto_now_add=True)
-    supporter = models.CharField(max_length=200)
-    type = models.ForeignKey('Pledgetype', on_delete=models.PROTECT, related_name='pledgetype')
+    user = models.ForeignKey(
+        'Project', 
+        on_delete=models.CASCADE, 
+        related_name='user_pledges'
+    )
+    type = models.ForeignKey(
+        'Pledgetype', 
+        on_delete=models.PROTECT, 
+        related_name='pledgetype'
+    )
 
 
 
 # {
-#     "title": "project1",
-#     "description": "description goes here",
-#     "goal": "100",
+#     "id": 1,
+#     "title": "Doggy Driving Lessons",
+#     "description": "Is your dog a menace on the road? We are raising money to provide free driving classes to all dogs living in the City of South Perth. Term One will cover accelerating, braking and reverse-parallel parking. Treats will be provided, cars will not - each dog must have permission to learn in their owner's car. Let's make our neighborhood streets the safest in the metro area!.",
+#     "goal": 7500,
 #     "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80",
-#     "is_open": "True",
-#     "date_created": "2020-03-20T14:28:23.382748Z",
-#     "creator": "michelle",
-#     "due_date": "2020-03-20T14:28:23.382748Z"
-# }
-
-#  {
-#     "amount": "50",
-#     "comment": "I support this!!",
-#     "anonymous": "True",
-#     "supporter": "anonymous",
-#     "project_id": "1",
-#     "type_id": "3"
+#     "is_open": true,
+#     "date_created": "2020-08-19T22:41:43.180006Z",
+#     "creator": "Michelle",
+#     "due_date": "2020-03-20T14:28:23.382748Z",
+#     "category_id": 1,
+#     "location_id": 1,
+#     "pledges": [
+#         {
+#             "id": 1,
+#             "amount": 50,
+#             "comment": "LOVE this idea!! My dog is the worst driver. It's unbelievable that she's allowed behind the wheel without lessons.",
+#             "anonymous": true,
+#             "supporter": "Michelle",
+#             "project_id": 1,
+#             "date_created": "2020-08-19T23:30:58.401674Z",
+#             "type_id": 3
+#         }
+#     ]
 # }

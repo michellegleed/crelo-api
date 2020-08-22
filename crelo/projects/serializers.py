@@ -63,7 +63,7 @@ class ProjectSerializer(serializers.Serializer):
     image = serializers.URLField()
     is_open = serializers.BooleanField()
     date_created = serializers.ReadOnlyField()
-    creator = serializers.CharField(max_length=200)
+    creator = serializers.ReadOnlyField(source='creator.id')
     due_date = serializers.DateTimeField()
     category_id = serializers.IntegerField()
     location_id = serializers.IntegerField()
