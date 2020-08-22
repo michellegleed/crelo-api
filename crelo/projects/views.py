@@ -221,11 +221,6 @@ class LocationDetail(APIView):
     
     #ADMIN ONLY!!! Might need to use a mixin??
 
-    def get(self, request, pk):
-        location = self.get_object(pk)
-        serializer = LocationSerializer(location)
-        return Response(serializer.data)
-
     def delete(self, request, pk):
         location = self.get_object(pk)
         location.delete()
@@ -247,3 +242,9 @@ class ProjectListByLocation(APIView):
         serializer = ProjectSerializer(projects, many=True)
         return Response(serializer.data)
         
+class ProjectListByLocationAndCategory(APIView):
+
+    def get(self, request, loc_pk, cat_pk):
+        projects = Project.objects.filter(location=loc_pk, category=cat_pk)
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data)
