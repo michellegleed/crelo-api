@@ -20,7 +20,7 @@ class Project(models.Model):
     is_open = models.BooleanField()
     date_created = models.DateTimeField(auto_now_add=True)
     # creator = models.CharField(max_length=200)
-    creator = models.ForeignKey(
+    user = models.ForeignKey(
         get_user_model(), 
         on_delete=models.CASCADE, 
         related_name='user_projects'

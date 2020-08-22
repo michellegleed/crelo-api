@@ -1,9 +1,11 @@
 from django.http import Http404
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location
 from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer
+
+from .permissions import IsOwnerOrReadOnly
 
 # TODO: Have to add PUT and DELETE to  these views!
 
@@ -31,6 +33,8 @@ class ProjectList(APIView):
 
 
 class ProjectDetail(APIView):
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_object(self, pk):
         try:
