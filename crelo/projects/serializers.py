@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Project, Pledge, Pledgetype, ProjectCategory, Location
+from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate
 
 class LocationSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
@@ -38,7 +38,7 @@ class PledgetypeSerializer(serializers.Serializer):
         instance.type = validated_data.get('type', instance.type)
         instance.save()
         return instance
-
+    
 
 class PledgeSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
@@ -47,7 +47,7 @@ class PledgeSerializer(serializers.Serializer):
     anonymous = serializers.BooleanField()
     # The source argument (being passed in on the next line) controls which attribute is used to populate a field, and can point at any attribute on the serialized instance, which in this case the attribute is the id and the instance is the instance of a user.
     user = serializers.ReadOnlyField(source='user.id')
-    project_id = serializers.IntegerField()
+    project_id = serializers.ReadOnlyField(source='project.id')
     date_created = serializers.ReadOnlyField()
     type_id = serializers.IntegerField()
 
@@ -65,13 +65,27 @@ class PledgeSerializer(serializers.Serializer):
         instance.save()
         return instance
 
+class ProgressUpdateSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    project_id = serializers.ReadOnlyField(source='project.id')
+    date_posted = serializers.ReadOnlyField()
+    content = comment = serializers.CharField(max_length=2000)
+
+    def create(self, validated_data):
+        return ProgressUpdate.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.content = validated_data.get( 'content', instance.content) 
+        instance.save()
+        return instance
 
 #this serializer shows just the project data
 class ProjectSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     title = serializers.CharField(max_length=200)
     description = serializers.CharField(max_length=800)
-    goal = serializers.IntegerField()
+    goal_amount = serializers.IntegerField()
+    current_amount = serializers.IntegerField()
     image = serializers.URLField()
     is_open = serializers.BooleanField()
     date_created = serializers.ReadOnlyField()
@@ -88,7 +102,8 @@ class ProjectSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
-        instance.goal = validated_data.get('goal', instance.goal)
+        instance.goal_amount = validated_data.get('goal_amount', instance.goal_amount)
+        instance.current_amount = validated_data.get('current_amount', instance.current_amount)
         instance.image = validated_data.get('image', instance.image)
         instance.is_open = validated_data.get('is_open', instance.is_open)
         instance.date_created = validated_data.get('date_created', instance.date_created)
@@ -101,5 +116,6 @@ class ProjectSerializer(serializers.Serializer):
 
 # #this serializer inherits from the ProjectSerializer. It shows the project data (everything in the ProjectSerializer) AND all the pledges.
 class ProjectDetailSerializer(ProjectSerializer):
+    updates = ProgressUpdateSerializer(many=True, read_only=True)
     pledges = PledgeSerializer(many=True, read_only=True)
 

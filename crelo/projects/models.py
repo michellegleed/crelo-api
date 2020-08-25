@@ -12,10 +12,17 @@ class Location(models.Model):
 class Pledgetype(models.Model):
     type = models.CharField(max_length=50)
 
+class ProgressUpdate(models.Model):
+    project_id = models.ForeignKey('Project', on_delete=models.CASCADE)
+    date_posted = models.DateTimeField(auto_now_add=True)
+    content = models.TextField()
+    
+
 class Project(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
-    goal = models.IntegerField()
+    goal_amount = models.IntegerField()
+    current_amount = models.IntegerField(default=0)
     image = models.URLField()
     is_open = models.BooleanField()
     date_created = models.DateTimeField(auto_now_add=True)
@@ -28,6 +35,7 @@ class Project(models.Model):
     due_date = models.DateTimeField()
     category = models.ForeignKey('ProjectCategory', on_delete=models.PROTECT)
     location = models.ForeignKey('Location', on_delete=models.CASCADE)
+
 
 class Pledge(models.Model):
     amount = models.IntegerField()
