@@ -40,7 +40,7 @@ class Pledge(models.Model):
     )
     date_created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
-        'Project', 
+        get_user_model(),
         on_delete=models.CASCADE, 
         related_name='user_pledges'
     )
@@ -53,27 +53,30 @@ class Pledge(models.Model):
 
 
 # {
-#     "id": 1,
 #     "title": "Doggy Driving Lessons",
 #     "description": "Is your dog a menace on the road? We are raising money to provide free driving classes to all dogs living in the City of South Perth. Term One will cover accelerating, braking and reverse-parallel parking. Treats will be provided, cars will not - each dog must have permission to learn in their owner's car. Let's make our neighborhood streets the safest in the metro area!.",
 #     "goal": 7500,
 #     "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80",
 #     "is_open": true,
 #     "date_created": "2020-08-19T22:41:43.180006Z",
-#     "creator": "Michelle",
 #     "due_date": "2020-03-20T14:28:23.382748Z",
 #     "category_id": 1,
 #     "location_id": 1,
 #     "pledges": [
-#         {
-#             "id": 1,
-#             "amount": 50,
-#             "comment": "LOVE this idea!! My dog is the worst driver. It's unbelievable that she's allowed behind the wheel without lessons.",
-#             "anonymous": true,
-#             "supporter": "Michelle",
-#             "project_id": 1,
-#             "date_created": "2020-08-19T23:30:58.401674Z",
-#             "type_id": 3
-#         }
+        # {
+        #     "amount": 50,
+        #     "comment": "LOVE this idea!! My dog is the worst driver. It's unbelievable that she's allowed behind the wheel without lessons.",
+        #     "anonymous": true,
+        #     "project_id": 1,
+        #     "date_created": "2020-08-19T23:30:58.401674Z",
+        #     "type_id": 3
+        # }
 #     ]
+# }
+
+# {
+    # "username": "ruby",
+    # "email": "ruby@gmail.com",
+    # "password": "test4321",
+    # "location_id": 2
 # }

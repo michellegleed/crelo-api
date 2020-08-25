@@ -5,12 +5,14 @@ from rest_framework.response import Response
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location
 from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer
 
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
 
 # TODO: Have to add PUT and DELETE to  these views!
 
 
 class ProjectList(APIView):
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         projects = Project.objects.all()
@@ -21,7 +23,7 @@ class ProjectList(APIView):
     def post(self, request):
         serializer = ProjectSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(creator=request.user)
+            serializer.save(user=request.user)
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED
@@ -47,7 +49,6 @@ class ProjectDetail(APIView):
         serializer = ProjectDetailSerializer(project)
         return Response(serializer.data)
 
-    #CREATOR ONLY!!! Might need to use a mixin??
     def put(self, request, pk):
         project = self.get_object(pk)
         # Have to pass in as third agrument partial=True, otherwise the serializer will require a value to be submitted for EVERY property EVERY time.
@@ -56,6 +57,7 @@ class ProjectDetail(APIView):
             serializer.save()
             return Response(serializer.data) # status=200 so no need to include - it's the default.
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class PledgeList(APIView):
 
@@ -67,7 +69,7 @@ class PledgeList(APIView):
     def post(self, request):
         serializer = PledgeSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=request.user)
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED
@@ -141,11 +143,21 @@ class PledgetypeDetail(APIView):
         serializer = PledgetypeSerializer(pledgetype)
         return Response(serializer.data)
     
-    #ADMIN ONLY!!! Might need to use a mixin??
+    #ADMIN ONLY!!! 
+    def put(self, request, pk):
+        pledgetype = self.get_object(pk)
+        # Have to pass in as third agrument partial=True, otherwise the serializer will require a value to be submitted for EVERY property EVERY time.
+        serializer = PledgetypeSerializer(pledgetype, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data) # status=200 so no need to include - it's the default.
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request, pk):
         pledgetype = self.get_object(pk)
         pledgetype.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ProjectCategoryList(APIView):
 
@@ -182,13 +194,25 @@ class ProjectCategoryDetail(APIView):
         serializer = ProjectCategorySerializer(category)
         return Response(serializer.data)
     
-    #ADMIN ONLY!!! Might need to use a mixin??
+    #ADMIN ONLY!!!
+    def put(self, request, pk):
+        category = self.get_object(pk)
+        # Have to pass in as third agrument partial=True, otherwise the serializer will require a value to be submitted for EVERY property EVERY time.
+        serializer = ProjectCategorySerializer(category, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data) # status=200 so no need to include - it's the default.
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request, pk):
         category = self.get_object(pk)
         category.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class LocationList(APIView):
+
+    permission_classes = [IsAdminOrReadOnly]
 
     def get(self, request):
         location = Location.objects.all()
@@ -209,6 +233,11 @@ class LocationList(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+        # def get_object(self):
+        #     obj = get_object_or_404(self.get_queryset(), pk=self.kwargs["pk"])
+        #     self.check_object_permissions(self.request, obj)
+        #     return obj
+
 
 class LocationDetail(APIView):
     
@@ -224,12 +253,19 @@ class LocationDetail(APIView):
         return Response(serializer.data)
     
     #ADMIN ONLY!!! Might need to use a mixin??
+    def put(self, request, pk):
+        location = self.get_object(pk)
+        # Have to pass in as third agrument partial=True, otherwise the serializer will require a value to be submitted for EVERY property EVERY time.
+        serializer = LocationSerializer(location, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data) # status=200 so no need to include - it's the default.
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         location = self.get_object(pk)
         location.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 # class LocationSLUGDetail(APIView):
 
@@ -245,7 +281,8 @@ class ProjectListByLocation(APIView):
         projects = Project.objects.filter(location=pk)
         serializer = ProjectSerializer(projects, many=True)
         return Response(serializer.data)
-        
+
+
 class ProjectListByLocationAndCategory(APIView):
 
     def get(self, request, loc_pk, cat_pk):

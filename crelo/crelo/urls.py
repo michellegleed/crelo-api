@@ -15,9 +15,14 @@ Including another URLconf
 """
 
 from django.urls import path, include
+from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path('', include('projects.urls')),
     path('', include('users.urls')),
+    # this is so we can log in as a superuser in the DRF backend API view thing.
     path('api-auth/', include('rest_framework.urls')),
+
+    # token! So the API can remember the user is logged in.
+    path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
 ]
