@@ -13,6 +13,8 @@ class Location(models.Model):
     name = models.CharField(max_length=200)
     # slug_name = models.CharField(max_length=50)
 
+    def __str__(self):
+        return self.name
 
 class Pledgetype(models.Model):
     type = models.CharField(max_length=50)
@@ -38,7 +40,11 @@ class Project(models.Model):
         related_name='user_projects'
     )
     due_date = models.DateTimeField()
-    category = models.ForeignKey('ProjectCategory', on_delete=models.PROTECT)
+    category = models.ForeignKey(
+        ProjectCategory, 
+        on_delete=models.PROTECT, 
+        related_name='category_projects'
+    )
     location = models.ForeignKey('Location', on_delete=models.CASCADE)
 
 
