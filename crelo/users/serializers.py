@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import CustomUser
 
+from projects.models import ProjectCategory
+
 class CustomUserSerializer(serializers.Serializer):
 
     id = serializers.ReadOnlyField()
@@ -9,6 +11,7 @@ class CustomUserSerializer(serializers.Serializer):
     email = serializers.CharField(max_length=200)
     password = serializers.CharField(write_only=True)
     location_id = serializers.IntegerField()
+    favourite_categories = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all(), many=True)
 
     def create(self, validated_data):
 
@@ -25,6 +28,10 @@ class CustomUserSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
         instance.location_id = validated_data.get('location_id', instance.location_id)
+
+        if 'favourite_categories' in validated_data:
+            cats = validated_data['favourite_categories']
+            instance.favourite_categories.set(cats)
 
         instance.save()
 

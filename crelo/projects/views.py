@@ -58,17 +58,31 @@ class ProjectDetail(APIView):
 
 
 class ProgressUpdateList(APIView):
+
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     
     def get(self, request, project_pk):
-        progress_updates = ProgressUpdate.objects.get(project__id=project_pk)
+        progress_updates = ProgressUpdate.objects.filter(project_id=project_pk)
         serializer = ProgressUpdateSerializer(progress_updates, many=True)
         return Response(serializer.data)
 
     def post(self, request, project_pk):
-        pass
 
-        # UP TO HERE!! :)
+        serializer = ProgressUpdateSerializer(data=request.data)
+
+        project = Project.objects.get(pk=project_pk)
+
+        if serializer.is_valid():
+            serializer.save(project_id=project)
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
 
 class ProgressUpdateDetail(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
@@ -362,3 +376,28 @@ class ProjectListByLocationAndCategory(APIView):
         projects = Project.objects.filter(location=loc_pk, category=cat_pk)
         serializer = ProjectSerializer(projects, many=True)
         return Response(serializer.data)
+
+class ProjectListFiltered(APIView):
+
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+
+        user_categories = ProjectCategory.objects.filter(customuser__id=self.request.user.id)
+
+        projects = Project.objects.none()
+
+         # adding the query sets together using the "|" 
+        for cat_id in user_categories:
+            projects = projects |Project.objects.filter(category=cat_id)
+
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data)
+
+
+# class LocationSLUGDetail(APIView):
+
+#     def get(self, request, location):
+#         location = Location.objects.get(slug_name=location)
+#         serializer = LocationSerializer(location)
+#         return Response(serializer.data)

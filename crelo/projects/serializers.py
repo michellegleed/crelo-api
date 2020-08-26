@@ -55,13 +55,13 @@ class PledgeSerializer(serializers.Serializer):
         return Pledge.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        instance.amount = validated_data.get( 'amount', instance.amount) 
-        instance.comment = validated_data.get( 'comment', instance.comment) 
-        instance.anonymous = validated_data.get( 'anonymous', instance.anonymous) 
-        instance.user = validated_data.get( 'user', instance.user) 
-        instance.project_id = validated_data.get( 'project_id', instance.project_id) 
-        instance.date_created = validated_data.get( 'date_created', instance.date_created) 
-        instance.type_id = validated_data.get( 'type_id', instance.type_id) 
+        instance.amount = validated_data.get('amount', instance.amount) 
+        instance.comment = validated_data.get('comment', instance.comment) 
+        instance.anonymous = validated_data.get('anonymous', instance.anonymous) 
+        instance.user = validated_data.get('user', instance.user) 
+        instance.project_id = validated_data.get('project_id', instance.project_id) 
+        instance.date_created = validated_data.get('date_created', instance.date_created) 
+        instance.type_id = validated_data.get('type_id', instance.type_id) 
         instance.save()
         return instance
 
@@ -69,13 +69,13 @@ class ProgressUpdateSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     project_id = serializers.ReadOnlyField(source='project.id')
     date_posted = serializers.ReadOnlyField()
-    content = comment = serializers.CharField(max_length=2000)
+    content = serializers.CharField(max_length=2000)
 
     def create(self, validated_data):
         return ProgressUpdate.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        instance.content = validated_data.get( 'content', instance.content) 
+        instance.content = validated_data.get('content', instance.content) 
         instance.save()
         return instance
 

@@ -4,16 +4,22 @@ from django.contrib.auth import get_user_model
 
 class ProjectCategory(models.Model):
     name = models.CharField(max_length=80)
+
+    def __str__(self):
+        return self.username
     
+
 class Location(models.Model):
     name = models.CharField(max_length=200)
     # slug_name = models.CharField(max_length=50)
 
+
 class Pledgetype(models.Model):
     type = models.CharField(max_length=50)
 
+
 class ProgressUpdate(models.Model):
-    project_id = models.ForeignKey('Project', on_delete=models.CASCADE)
+    project_id = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='updates')
     date_posted = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
     
@@ -26,7 +32,6 @@ class Project(models.Model):
     image = models.URLField()
     is_open = models.BooleanField()
     date_created = models.DateTimeField(auto_now_add=True)
-    # creator = models.CharField(max_length=200)
     user = models.ForeignKey(
         get_user_model(), 
         on_delete=models.CASCADE, 
