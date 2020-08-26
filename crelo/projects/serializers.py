@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate
+# Importing this to check whether project has passed due date and should be closed.
+from django.utils.timezone import now
 
 class LocationSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
@@ -65,6 +67,7 @@ class PledgeSerializer(serializers.Serializer):
         instance.save()
         return instance
 
+
 class ProgressUpdateSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     project_id = serializers.ReadOnlyField(source='project.id')
@@ -88,6 +91,7 @@ class ProjectSerializer(serializers.Serializer):
     current_amount = serializers.IntegerField()
     image = serializers.URLField()
     is_open = serializers.BooleanField()
+    check_is_open = serializers.SerializerMethodField()
     date_created = serializers.ReadOnlyField()
     user = serializers.ReadOnlyField(source='user.id')
     due_date = serializers.DateTimeField()
@@ -113,9 +117,16 @@ class ProjectSerializer(serializers.Serializer):
         instance.save()
         return instance
 
+    def get_check_is_open(self, instance):
+            if instance.is_open:
+                instance.is_open = instance.due_date > now()
+                instance.save()
+                return instance
+
 
 # #this serializer inherits from the ProjectSerializer. It shows the project data (everything in the ProjectSerializer) AND all the pledges.
 class ProjectDetailSerializer(ProjectSerializer):
     updates = ProgressUpdateSerializer(many=True, read_only=True)
     pledges = PledgeSerializer(many=True, read_only=True)
+
 
