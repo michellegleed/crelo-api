@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate
+from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
 
 class LocationSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
@@ -65,6 +65,21 @@ class PledgeSerializer(serializers.Serializer):
         instance.save()
         return instance
 
+
+class ActivitySerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    action = serializers.CharField(max_length=200)
+    datetime = serializers.ReadOnlyField()
+    user_id = serializers.ReadOnlyField(source='user.id')
+    location_id = serializers.ReadOnlyField(source='location.id')
+    project_id = serializers.ReadOnlyField(source='project.id')
+    object_id = serializers.ReadOnlyField()
+    object_model = serializers.ReadOnlyField()
+    
+    def create(self, validated_data):
+        return Activity.objects.create(**validated_data)
+
+
 class ProgressUpdateSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     project_id = serializers.ReadOnlyField(source='project.id')
@@ -92,7 +107,7 @@ class ProjectSerializer(serializers.Serializer):
     user = serializers.ReadOnlyField(source='user.id')
     due_date = serializers.DateTimeField()
     category_id = serializers.IntegerField()
-    location_id = serializers.IntegerField()
+    location_id = serializers.ReadOnlyField(source='user.location.id')
     
     # this func is required to store the data sent in the POST request to the database..
     def create(self, validated_data):
@@ -109,7 +124,7 @@ class ProjectSerializer(serializers.Serializer):
         instance.date_created = validated_data.get('date_created', instance.date_created)
         instance.due_date = validated_data.get('due_date', instance.due_date)
         instance.category_id = validated_data.get('category_id', instance.category_id)
-        instance.location_id = validated_data.get('location_id', instance.location_id)
+        # instance.location_id = validated_data.get('location_id', instance.location_id)
         instance.save()
         return instance
 
@@ -118,4 +133,5 @@ class ProjectSerializer(serializers.Serializer):
 class ProjectDetailSerializer(ProjectSerializer):
     updates = ProgressUpdateSerializer(many=True, read_only=True)
     pledges = PledgeSerializer(many=True, read_only=True)
+
 

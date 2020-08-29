@@ -29,6 +29,7 @@ class ProgressUpdate(models.Model):
 
 class Project(models.Model):
     title = models.CharField(max_length=200)
+    venue = models.CharField(blank=True, max_length=200)
     description = models.TextField()
     goal_amount = models.IntegerField()
     current_amount = models.IntegerField(default=0)
@@ -70,6 +71,35 @@ class Pledge(models.Model):
         related_name='pledgetype'
     )
 
+# Activity possible actions: 
+    # - project reaches goal amount (and 25%, 50% and 100%)
+    # - creator posts a progress update
+    # - someone comments on a project you've pledged to'
+    # - new project created
+
+
+class Activity(models.Model):
+    action = models.CharField(max_length=200)
+    datetime = models.DateTimeField(auto_now_add=True)
+    object_model = models.CharField(max_length=100)
+    object_id = models.IntegerField()
+    
+    user = models.ForeignKey(
+        get_user_model(), 
+        on_delete=models.CASCADE, 
+        related_name='user_activity'
+    )
+    location = models.ForeignKey(
+        Location, 
+        on_delete=models.CASCADE, 
+        related_name='location_activity'
+    )
+    project = models.ForeignKey(
+        Project, 
+        on_delete=models.CASCADE, 
+        related_name='project_activity'
+    )
+    
 
 
 # {

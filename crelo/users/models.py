@@ -1,10 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-from projects.models import ProjectCategory
+from projects.models import ProjectCategory, Location
 
 class CustomUser(AbstractUser):
-    location_id = models.IntegerField() 
+    location = models.ForeignKey(
+        Location, 
+        on_delete=models.CASCADE, 
+        related_name='user_location'
+    )
     is_admin = models.BooleanField(default=False)
     favourite_categories = models.ManyToManyField(ProjectCategory, related_name='customuser')
 

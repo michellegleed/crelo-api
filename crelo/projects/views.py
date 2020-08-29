@@ -2,8 +2,8 @@ from django.http import Http404
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate
-from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer, ProgressUpdateSerializer
+from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
+from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer, ProgressUpdateSerializer, ActivitySerializer
 
 from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
 
@@ -21,15 +21,21 @@ class ProjectList(APIView):
     def post(self, request):
         serializer = ProjectSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-                )
+            serializer.save(user=request.user, location=request.user.location)
+
+            activity_data = {"action": "new-project"}
+            activity_serializer = ActivitySerializer(data=activity_data)
+            if activity_serializer.is_valid():
+                activity_serializer.save(user=request.user, project_id=serializer.data['id'], location_id=serializer.data['location_id'], object_id=serializer.data['id'])
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED
+                    )
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
 
 
 class ProjectDetail(APIView):
@@ -74,6 +80,12 @@ class ProgressUpdateList(APIView):
 
         if serializer.is_valid():
             serializer.save(project_id=project)
+
+            activity_data = {"action": "progress-update", "model": "ProgressUpdate"}
+            activity = ActivitySerializer(data=activity_data)
+            if activity.is_valid():
+                activity.save(user=request.user, project_id=project.id, location_id=project.location.id, object_id=serializer.data['id'])
+
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED
@@ -401,3 +413,55 @@ class ProjectListFiltered(APIView):
 #         location = Location.objects.get(slug_name=location)
 #         serializer = LocationSerializer(location)
 #         return Response(serializer.data)
+
+
+class AllActivity(APIView):
+
+    def get(self, request):
+        activities = Activity.objects.all()
+        serializer = ActivitySerializer(activities, many=True)
+        return Response(serializer.data)
+
+class LocationActivity(APIView):
+    def get(self, request, pk):
+        
+        activity_feed = Activity.objects.filter(location=pk).order_by('-datetime')
+        activity_data = []
+        for item in activity_feed:
+
+            if item.action == "progress-update":
+                dict = { "action": item.action }
+                progress_update = ProgressUpdate.objects.get(pk=item.object_id)
+                serializer = ProgressUpdateSerializer(progress_update)
+
+                for key in serializer.data:
+                    dict[str(key)] = serializer.data[str(key)]
+
+                project = Project.objects.get(pk=item.project_id)
+                project_serializer = ProjectSerializer(project)
+                dict["project"] = project_serializer.data
+                
+                activity_data.append(dict)
+
+            if item.action == "new-project":
+                dict = { "action": item.action }
+                project = Project.objects.get(pk=item.object_id)
+                serializer = ProjectSerializer(project)
+
+                for key in serializer.data:
+                    dict[str(key)] = serializer.data[str(key)]
+
+                activity_data.append(dict)
+
+            if item.action == "milestone":
+                dict = { "action": item.action }
+                project = Project.objects.get(pk=item.object_id)
+                serializer = ProjectSerializer(project)
+
+                for key in serializer.data:
+                    dict[str(key)] = serializer.data[str(key)]
+
+                activity_data.append(dict)
+
+        return Response(activity_data)
+

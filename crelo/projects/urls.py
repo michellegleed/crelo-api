@@ -15,6 +15,7 @@ urlpatterns = [
     path('locations/<int:loc_pk>/categories/<int:cat_pk>/projects/', views.ProjectListByLocationAndCategory.as_view()),
     path('locations/', views.LocationList.as_view()),
     path('locations/<int:pk>/', views.LocationDetail.as_view()),    
+    path('locations/<int:pk>/activity/', views.LocationActivity.as_view()),    
     path('project-categories/<int:pk>/', views.ProjectCategoryDetail.as_view()),
     
     # not using this url with slug below. Probably don't need to make it nice cos user won't see it I don't think - react should have it's own routes on the front end that the user sees...??
@@ -24,6 +25,8 @@ urlpatterns = [
     path('pledges/types/', views.PledgetypeList.as_view()),
     path('pledges/types/<int:pk>/', views.PledgetypeDetail.as_view()),    
     
+    # EXPERIMENTAL...
+    path('activities/', views.AllActivity.as_view()),
     
 ] 
 
