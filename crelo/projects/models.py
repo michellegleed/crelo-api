@@ -30,9 +30,9 @@ class Project(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     goal_amount = models.IntegerField()
-    current_amount = models.IntegerField(default=0)
+    current_amount = models.IntegerField(blank=True, default=0)
     image = models.URLField()
-    is_open = models.BooleanField()
+    is_open = models.BooleanField(blank=True, default=True)
     date_created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
         get_user_model(), 
@@ -69,6 +69,10 @@ class Pledge(models.Model):
         related_name='pledgetype'
     )
 
+# DATETIME FORMAT>>>
+# YYYY-MM-DDThh:mm[:ss[.uuuuuu]][+HH:MM|-HH:MM|Z]
+# "2020-03-20T14:28:23.382748Z"
+# 2020-10-22T17:30:01+08:00
 
 
 # {
@@ -82,14 +86,14 @@ class Pledge(models.Model):
 #     "category_id": 1,
 #     "location_id": 1,
 #     "pledges": [
-        # {
-        #     "amount": 50,
-        #     "comment": "LOVE this idea!! My dog is the worst driver. It's unbelievable that she's allowed behind the wheel without lessons.",
-        #     "anonymous": true,
-        #     "project_id": 1,
-        #     "date_created": "2020-08-19T23:30:58.401674Z",
-        #     "type_id": 3
-        # }
+#         {
+#             "amount": 50,
+#             "comment": "LOVE this idea!! My dog is the worst driver. It's unbelievable that she's allowed behind the wheel without lessons.",
+#             "anonymous": true,
+#             "project_id": 1,
+#             "date_created": "2020-08-19T23:30:58.401674Z",
+#             "type_id": 3
+#         }
 #     ]
 # }
 
@@ -99,3 +103,5 @@ class Pledge(models.Model):
     # "password": "test4321",
     # "location_id": 2
 # }
+
+

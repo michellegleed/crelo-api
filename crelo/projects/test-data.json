@@ -1,0 +1,17 @@
+[
+    {"model": "projects.projectcategory", "pk": 1, "fields": {"name": "Education"}}, 
+    {"model": "projects.projectcategory", "pk": 2, "fields": {"name": "Arts"}}, 
+    {"model": "projects.projectcategory", "pk": 3, "fields": {"name": "Natural Landscape"}}, 
+    {"model": "projects.projectcategory", "pk": 4, "fields": {"name": "Kids"}}, 
+    {"model": "projects.location", "pk": 1, "fields": {"name": "City of South Perth"}}, 
+    {"model": "projects.location", "pk": 2, "fields": {"name": "City of Victoria Park"}}, 
+    {"model": "projects.location", "pk": 3, "fields": {"name": "City of Fremantle"}}, 
+    {"model": "projects.location", "pk": 4, "fields": {"name": "City of Belmont"}}, 
+    {"model": "projects.location", "pk": 5, "fields": {"name": "City of Melville"}}, 
+    {"model": "projects.pledgetype", "pk": 1, "fields": {"type": "dollars"}}, 
+    {"model": "projects.progressupdate", "pk": 1, "fields": {"project_id": 1, "date_posted": "2020-08-26T10:23:34.701Z", "content": "Hey everyone! Here's an update on our project."}}, 
+    {"model": "projects.project", "pk": 1, "fields": {"title": "Doggy Driving Lessons", "description": "Is your dog a menace on the road? We are raising money to provide free driving classes to all dogs living in the City of South Perth. Term One will cover accelerating, braking and reverse-parallel parking. Treats will be provided, cars will not - each dog must have permission to learn in their owner's car. Let's make our neighborhood streets the safest in the metro area!.", "goal_amount": 2000, "current_amount": 150, "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80", "is_open": false, "date_created": "2020-08-22T02:03:13.936Z", "user": 1, "due_date": "2020-10-20T14:28:23.382Z", "category": 1, "location": 1}}, 
+    {"model": "projects.project", "pk": 2, "fields": {"title": "Music by the River", "description": "Pledge to come down and play music on the riverbank on a Saturday afternoon. Each set can last between 30 and 60 minutes. Bands and solo artists.", "goal_amount": 10, "current_amount": 0, "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80", "is_open": false, "date_created": "2020-08-22T03:48:48.817Z", "user": 1, "due_date": "2020-03-20T14:28:23.382Z", "category": 3, "location": 1}}, 
+    {"model": "projects.project", "pk": 3, "fields": {"title": "Cat Fishing Group", "description": "Helping the neighborhood cats to stay fit and healthy - and get some outdoor time!", "goal_amount": 7500, "current_amount": 0, "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80", "is_open": false, "date_created": "2020-08-23T00:27:10.291Z", "user": 1, "due_date": "2020-09-29T14:28:23.382Z", "category": 1, "location": 2}}, 
+    {"model": "projects.pledge", "pk": 1, "fields": {"amount": 75, "comment": "LOVE this idea!! My dog is the worst driver. It's unbelievable that she's allowed behind the wheel without lessons.", "anonymous": true, "project": 1, "date_created": "2020-08-23T01:07:09.512Z", "user": 1, "type": 2}}, 
+    {"model": "projects.pledge", "pk": 2, "fields": {"amount": 75, "comment": "YES yes yes. i LOVE driving.", "anonymous": false, "project": 1, "date_created": "2020-08-25T13:50:17.201Z", "user": 2, "type": 2}}]
