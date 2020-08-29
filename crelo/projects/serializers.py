@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
 
+# Importing this to check whether project has passed due date and should be closed.
+from django.utils.timezone import now
+
 class LocationSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     name = serializers.CharField(max_length=200)
@@ -108,6 +111,36 @@ class ProjectSerializer(serializers.Serializer):
     due_date = serializers.DateTimeField()
     category_id = serializers.IntegerField()
     location_id = serializers.ReadOnlyField(source='user.location.id')
+    next_milestone = serializers.IntegerField()
+
+    check_is_open = serializers.SerializerMethodField()
+    # check_for_milestone = serializers.SerializerMethodField()
+
+    def get_check_is_open(self, instance):
+        if instance.is_open:
+            instance.is_open = instance.due_date > now()
+            instance.save()
+            return instance
+
+    # def get_check_for_milestone(self, instance):
+    #     current_percent = instance.current_amount / instance.goal_amount * 100
+    #     if current_percent > instance.next_milestone:
+    #         instance.next_milestone += 25
+
+    #         activity_data = { 
+    #             "action": "milestone", 
+    #             "object_model": "Project", 
+    #             "object_id": instance.pk,
+    #         }
+
+    #         activity_serializer = ActivitySerializer(data=activity_data)
+
+    #         location = Location.objects.get(pk=instance.location_id)
+
+    #         if activity_serializer.is_valid():
+    #             activity_serializer.save(user=instance.user, location=location, project=instance)
+    #             instance.save()
+    #             return instance
     
     # this func is required to store the data sent in the POST request to the database..
     def create(self, validated_data):
@@ -133,5 +166,6 @@ class ProjectSerializer(serializers.Serializer):
 class ProjectDetailSerializer(ProjectSerializer):
     updates = ProgressUpdateSerializer(many=True, read_only=True)
     pledges = PledgeSerializer(many=True, read_only=True)
+    activity = ActivitySerializer(many=True, read_only=True)
 
 

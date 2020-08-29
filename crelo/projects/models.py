@@ -48,6 +48,7 @@ class Project(models.Model):
         related_name='category_projects'
     )
     location = models.ForeignKey('Location', on_delete=models.CASCADE)
+    next_milestone = models.IntegerField(default=25)
 
 
 class Pledge(models.Model):
