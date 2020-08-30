@@ -85,8 +85,8 @@ class Pledge(models.Model):
 class Activity(models.Model):
     action = models.CharField(max_length=200)
     datetime = models.DateTimeField(auto_now_add=True)
-    object_model = models.CharField(max_length=100)
-    object_id = models.IntegerField()
+    # object_model = models.CharField(max_length=100)
+    # object_id = models.IntegerField()
     
     user = models.ForeignKey(
         get_user_model(), 
@@ -146,4 +146,14 @@ class Activity(models.Model):
 # "comment": "woohoo! triggered another milestone!",
 # "anonymous": false,
 # "type_id": 2
+# }
+
+
+# {
+#     "title": "Creating new project TEST #1",
+#     "description": "Is your dog a menace on the road? We are raising money to provide free driving classes to all dogs living in the City of South Perth. Term One will cover accelerating, braking and reverse-parallel parking. Treats will be provided, cars will not - each dog must have permission to learn in their owner's car. Let's make our neighborhood streets the safest in the metro area!.",
+#     "goal_amount": 7500,
+#     "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80",
+#     "due_date": "2020-03-20T14:28:23.382748Z",
+#     "category_id": 1
 # }

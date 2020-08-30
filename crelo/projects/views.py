@@ -3,9 +3,53 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
-from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer, ProgressUpdateSerializer, ActivitySerializer, NewProjectSerializer
+from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer, ProgressUpdateSerializer, ActivitySerializer
+
+from django.dispatch import receiver, Signal
 
 from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
+
+# SIGNAL FUNCTIONS...
+
+activity_signal = Signal(providing_args=['action'])
+
+@receiver(activity_signal)
+def activity_signal_receiver(sender, **kwargs):
+    print("activity signal was triggered. kwargs = ", kwargs)
+
+    activity_data = {"action": kwargs.get('action')}
+
+    activity_serializer = ActivitySerializer(data=activity_data)
+    if activity_serializer.is_valid():
+        print("activity serialize is valid!")
+        activity_serializer.save(
+            user=kwargs.get('user'), 
+            project=kwargs.get('project'),
+            location=kwargs.get('location')
+        )
+
+    # def post(self, request):
+    #     serializer = PledgetypeSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(
+    #             serializer.data,
+    #             status=status.HTTP_201_CREATED
+    #         )
+    #     return Response(
+    #         serializer.errors,
+    #         status=status.HTTP_400_BAD_REQUEST
+    #     )
+
+    # activity_data = {"action": "new-project", "object_model": "Project", "object_id": serializer.data['id']}
+            
+    #         if activity_serializer.is_valid():
+    #             project = Project.objects.get(pk=serializer.data['id'])
+    #             activity_serializer.save(
+    #                 user=request.user, 
+    #                 project=project,
+    #                 location=request.user.location
+    #             )
 
 
 class ProjectList(APIView):
@@ -19,30 +63,34 @@ class ProjectList(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = NewProjectSerializer(data=request.data)
+        serializer = ProjectSerializer(data=request.data)
         
         if serializer.is_valid():
             print("about to save the new project serializer")
             serializer.save(user=request.user, location_id=request.user.location.id)
 
-            activity_data = {"action": "new-project", "object_model": "Project", "object_id": serializer.data['id']}
-            activity_serializer = ActivitySerializer(data=activity_data)
-            if activity_serializer.is_valid():
-                project = Project.objects.get(pk=serializer.data['id'])
-                activity_serializer.save(
-                    user=request.user, 
-                    project=project,
-                    location=request.user.location
-                )
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED
-                    )
+            project = Project.objects.get(pk=serializer.data['id'])
+
+            activity_signal.send(sender=ProgressUpdate, action="project-created", user=request.user, project=project, location=request.user.location)
+
+            # activity_data = {"action": "new-project", "object_model": "Project", "object_id": serializer.data['id']}
+            # activity_serializer = ActivitySerializer(data=activity_data)
+            # if activity_serializer.is_valid():
+            #     project = Project.objects.get(pk=serializer.data['id'])
+            #     activity_serializer.save(
+            #         user=request.user, 
+            #         project=project,
+            #         location=request.user.location
+            #     )
+            #     return Response(
+            #         serializer.data,
+            #         status=status.HTTP_201_CREATED
+            #         )
 
             return Response(
-                activity_serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-                )
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
@@ -77,7 +125,7 @@ class ProjectDetail(APIView):
 
 class ProgressUpdateList(APIView):
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     
     def get(self, request, project_pk):
         progress_updates = ProgressUpdate.objects.filter(project_id=project_pk)
@@ -89,14 +137,12 @@ class ProgressUpdateList(APIView):
         serializer = ProgressUpdateSerializer(data=request.data)
 
         project = Project.objects.get(pk=project_pk)
+        location = Location.objects.get(pk=project.location_id)
 
         if serializer.is_valid():
             serializer.save(project_id=project)
 
-            activity_data = {"action": "progress-update", "model": "ProgressUpdate"}
-            activity = ActivitySerializer(data=activity_data)
-            if activity.is_valid():
-                activity.save(user=request.user, project_id=project.id, location_id=project.location.id, object_id=serializer.data['id'])
+            activity_signal.send(sender=ProgressUpdate, action="progress-update", user=request.user, project=project, location=location)
 
             return Response(
                 serializer.data,
