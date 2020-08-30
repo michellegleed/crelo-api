@@ -24,17 +24,14 @@ class ProjectList(APIView):
         if serializer.is_valid():
             print("about to save the new project serializer")
             serializer.save(user=request.user, location_id=request.user.location.id)
-            # print("project saved! here's the saved project data: ", serializer.data)
 
             activity_data = {"action": "new-project", "object_model": "Project", "object_id": serializer.data['id']}
             activity_serializer = ActivitySerializer(data=activity_data)
-            print("here's the activity serializer data: ", activity_serializer)
             if activity_serializer.is_valid():
-                # activity_serializer.save(user=request.user, project_id=serializer.data['id'], location_id=serializer.data['location_id'], object_id=serializer.data['id'])
-                print("yay! activity serializer is valid. here's the data", activity_serializer.data)  
+                project = Project.objects.get(pk=serializer.data['id'])
                 activity_serializer.save(
                     user=request.user, 
-                    project=serializer.validated_data,
+                    project=project,
                     location=request.user.location
                 )
                 return Response(
@@ -42,10 +39,10 @@ class ProjectList(APIView):
                     status=status.HTTP_201_CREATED
                     )
 
-            # return Response(
-            #     serializer.data,
-            #     status=status.HTTP_201_CREATED
-            #     )
+            return Response(
+                activity_serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+                )
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST

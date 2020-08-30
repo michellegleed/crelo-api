@@ -140,3 +140,10 @@ class Activity(models.Model):
     # "password": "test4321",
     # "location_id": 2
 # }
+
+# {
+# "amount": 55,
+# "comment": "woohoo! triggered another milestone!",
+# "anonymous": false,
+# "type_id": 2
+# }
