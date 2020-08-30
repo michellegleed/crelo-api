@@ -484,42 +484,47 @@ class LocationActivity(APIView):
     def get(self, request, pk):
         
         activity_feed = Activity.objects.filter(location=pk).order_by('-datetime')
-        activity_data = []
-        for item in activity_feed:
 
-            if item.action == "progress-update":
-                dict = { "action": item.action }
-                progress_update = ProgressUpdate.objects.get(pk=item.object_id)
-                serializer = ProgressUpdateSerializer(progress_update)
+        serializer = ActivitySerializer(activity_feed, many=True)
 
-                for key in serializer.data:
-                    dict[str(key)] = serializer.data[str(key)]
+        return Response(serializer.data)
 
-                project = Project.objects.get(pk=item.project_id)
-                project_serializer = ProjectSerializer(project)
-                dict["project"] = project_serializer.data
+        # activity_data = []
+        # for item in activity_feed:
+
+        #     if item.action == "progress-update":
+        #         dict = { "action": item.action }
+        #         progress_update = ProgressUpdate.objects.get(pk=item.object_id)
+        #         serializer = ProgressUpdateSerializer(progress_update)
+
+        #         for key in serializer.data:
+        #             dict[str(key)] = serializer.data[str(key)]
+
+        #         project = Project.objects.get(pk=item.project_id)
+        #         project_serializer = ProjectSerializer(project)
+        #         dict["project"] = project_serializer.data
                 
-                activity_data.append(dict)
+        #         activity_data.append(dict)
 
-            if item.action == "new-project":
-                dict = { "action": item.action }
-                project = Project.objects.get(pk=item.object_id)
-                serializer = ProjectSerializer(project)
+        #     if item.action == "new-project":
+        #         dict = { "action": item.action }
+        #         project = Project.objects.get(pk=item.object_id)
+        #         serializer = ProjectSerializer(project)
 
-                for key in serializer.data:
-                    dict[str(key)] = serializer.data[str(key)]
+        #         for key in serializer.data:
+        #             dict[str(key)] = serializer.data[str(key)]
 
-                activity_data.append(dict)
+        #         activity_data.append(dict)
 
-            if item.action == "milestone":
-                dict = { "action": item.action }
-                project = Project.objects.get(pk=item.object_id)
-                serializer = ProjectSerializer(project)
+        #     if item.action == "milestone":
+        #         dict = { "action": item.action }
+        #         project = Project.objects.get(pk=item.object_id)
+        #         serializer = ProjectSerializer(project)
 
-                for key in serializer.data:
-                    dict[str(key)] = serializer.data[str(key)]
+        #         for key in serializer.data:
+        #             dict[str(key)] = serializer.data[str(key)]
 
-                activity_data.append(dict)
+        #         activity_data.append(dict)
 
-        return Response(activity_data)
+        # return Response(activity_data)
 

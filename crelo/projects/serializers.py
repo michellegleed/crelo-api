@@ -7,18 +7,6 @@ from django.utils.timezone import now
 # Have to use signals in the serializers just for the milestone serializer method on ProjectSerializer.
 from django.dispatch import receiver, Signal
 
-class LocationSerializer(serializers.Serializer):
-    id = serializers.ReadOnlyField()
-    name = serializers.CharField(max_length=200)
-    # slug_name = serializers.CharField(max_length=50)
-
-    def create(self, validated_data):
-        return Location.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        # instance.slug_name = validated_data.get('slug_name', instance.slug_name)
-     
 
 class ProjectCategorySerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
@@ -79,12 +67,29 @@ class ActivitySerializer(serializers.Serializer):
     user_id = serializers.ReadOnlyField(source='user.id')
     location_id = serializers.ReadOnlyField(source='location.id')
     project_id = serializers.ReadOnlyField(source='project.id')
-    # object_id = serializers.IntegerField()
-    # object_model = serializers.CharField(max_length=50)
     
     def create(self, validated_data):
         return Activity.objects.create(**validated_data)
 
+
+class LocationSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    name = serializers.CharField(max_length=200)
+    # slug_name = serializers.CharField(max_length=50)
+
+    activity = serializers.SerializerMethodField()
+
+    def get_activity(self, instance):
+         ordered_queryset = instance.location_activity.all().order_by('-datetime')
+         return ActivitySerializer(ordered_queryset, many=True, context=self.context).data
+
+    def create(self, validated_data):
+        return Location.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        # instance.slug_name = validated_data.get('slug_name', instance.slug_name)
+     
 
 class ProgressUpdateSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
@@ -180,8 +185,11 @@ class ProjectSerializer(serializers.Serializer):
 # #this serializer inherits from the ProjectSerializer. It shows the project data (everything in the ProjectSerializer) AND all the pledges.
 class ProjectDetailSerializer(ProjectSerializer):
     updates = ProgressUpdateSerializer(many=True, read_only=True)
-    pledges = PledgeSerializer(many=True, read_only=True)
+    # pledges = PledgeSerializer(many=True, read_only=True)
     project_activity = ActivitySerializer(many=True, read_only=True)
 
+    pledges = serializers.SerializerMethodField()
 
-
+    def get_pledges(self, instance):
+         ordered_queryset = instance.pledges.all().order_by('-amount','-date_created')
+         return PledgeSerializer(ordered_queryset, many=True, context=self.context).data
