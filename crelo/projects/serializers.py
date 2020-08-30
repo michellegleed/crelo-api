@@ -97,21 +97,54 @@ class ProgressUpdateSerializer(serializers.Serializer):
         instance.save()
         return instance
 
+# This serializer is only for creating a new project (no checking for milestones!)
+class NewProjectSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    title = serializers.CharField(max_length=200)
+    venue = serializers.CharField(max_length=200, default="")
+    description = serializers.CharField(max_length=800)
+    goal_amount = serializers.IntegerField()
+    current_amount = serializers.IntegerField(default=0)
+    image = serializers.URLField()
+    is_open = serializers.BooleanField(default=True)
+    date_created = serializers.ReadOnlyField()
+    user = serializers.ReadOnlyField(source='user.id')
+    due_date = serializers.DateTimeField()
+    category_id = serializers.IntegerField()
+    location = serializers.ReadOnlyField(source='location.id')
+    next_milestone = serializers.ReadOnlyField(default=25)
+
+    check_is_open = serializers.SerializerMethodField()
+
+    def get_check_is_open(self, instance):
+        if instance.is_open:
+            instance.is_open = instance.due_date > now()
+            instance.save()
+            return instance
+    
+    # this func is required to store the data sent in the POST request to the database..
+    def create(self, validated_data):
+        # the "**"" unpacks the validated_Data
+        print("the validated data looks like this: ", validated_data)
+        return Project.objects.create(**validated_data)
+
+
 #this serializer shows just the project data
 class ProjectSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     title = serializers.CharField(max_length=200)
+    venue = serializers.CharField(max_length=200, default="")
     description = serializers.CharField(max_length=800)
     goal_amount = serializers.IntegerField()
-    current_amount = serializers.IntegerField()
+    current_amount = serializers.IntegerField(default=0)
     image = serializers.URLField()
-    is_open = serializers.BooleanField()
+    is_open = serializers.BooleanField(default=True)
     date_created = serializers.ReadOnlyField()
     user = serializers.ReadOnlyField(source='user.id')
     due_date = serializers.DateTimeField()
     category_id = serializers.IntegerField()
     location_id = serializers.ReadOnlyField(source='user.location.id')
-    next_milestone = serializers.IntegerField()
+    next_milestone = serializers.IntegerField(default=25)
 
     check_is_open = serializers.SerializerMethodField()
     # check_for_milestone = serializers.SerializerMethodField()
@@ -122,6 +155,7 @@ class ProjectSerializer(serializers.Serializer):
             instance.save()
             return instance
 
+<<<<<<< Updated upstream
     # def get_check_for_milestone(self, instance):
     #     current_percent = instance.current_amount / instance.goal_amount * 100
     #     if current_percent > instance.next_milestone:
@@ -141,10 +175,32 @@ class ProjectSerializer(serializers.Serializer):
     #             activity_serializer.save(user=instance.user, location=location, project=instance)
     #             instance.save()
     #             return instance
+=======
+    def get_check_for_milestone(self, instance):
+        current_percent = instance.current_amount / instance.goal_amount * 100
+        
+        if current_percent >= float(instance.next_milestone):
+
+            activity_data = { 
+                "action": "milestone", 
+                "object_model": "Project", 
+                "object_id": instance.id,
+            }
+
+            location = Location.objects.get(pk=instance.location_id)
+
+            activity_serializer = ActivitySerializer(data=activity_data)
+            if activity_serializer.is_valid():
+                activity_serializer.save(user=instance.user, location=location.id, project=instance.id)
+                instance.next_milestone += 25
+                instance.save()
+                return instance
+>>>>>>> Stashed changes
     
     # this func is required to store the data sent in the POST request to the database..
     def create(self, validated_data):
         # the "**"" unpacks the validated_Data
+        print("the validated data looks like this: ", validated_data)
         return Project.objects.create(**validated_data)
 
     def update(self, instance, validated_data):

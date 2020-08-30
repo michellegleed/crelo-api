@@ -29,12 +29,12 @@ class ProgressUpdate(models.Model):
 
 class Project(models.Model):
     title = models.CharField(max_length=200)
-    venue = models.CharField(blank=True, max_length=200)
+    venue = models.CharField(max_length=200, blank=True)
     description = models.TextField()
     goal_amount = models.IntegerField()
-    current_amount = models.IntegerField(default=0)
+    current_amount = models.IntegerField(default=0, blank=True)
     image = models.URLField()
-    is_open = models.BooleanField()
+    is_open = models.BooleanField(default=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
         get_user_model(), 
@@ -47,8 +47,11 @@ class Project(models.Model):
         on_delete=models.PROTECT, 
         related_name='category_projects'
     )
-    location = models.ForeignKey('Location', on_delete=models.CASCADE)
-    next_milestone = models.IntegerField(default=25)
+    location = models.ForeignKey(
+        Location, 
+        on_delete=models.CASCADE, 
+        related_name='location_projects')
+    next_milestone = models.IntegerField(default=25, blank=True)
 
 
 class Pledge(models.Model):
@@ -101,6 +104,12 @@ class Activity(models.Model):
         related_name='project_activity'
     )
     
+
+# SHELL COMMANDS #
+# from projects.models import Project
+# Project.objects.all()
+# pj = Project.objects.get(pk=)
+# pj.delete()
 
 
 # {
