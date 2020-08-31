@@ -3,9 +3,28 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
-from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer, ProgressUpdateSerializer, ActivitySerializer
+from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer, ProgressUpdateSerializer, ActivitySerializer, ActivityDetailSerializer
 
-from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
+from django.dispatch import receiver, Signal
+
+from .permissions import IsOwnerOrReadOnly, IsProjectOwnerOrReadOnly, IsAdminOrReadOnly
+
+# SIGNAL FUNCTIONS...
+
+activity_signal = Signal(providing_args=['action'])
+
+@receiver(activity_signal)
+def activity_signal_receiver(sender, **kwargs):
+
+    activity_data = {"action": kwargs.get('action')}
+
+    activity_serializer = ActivitySerializer(data=activity_data)
+    if activity_serializer.is_valid():
+        activity_serializer.save(
+            user=kwargs.get('user'), 
+            project=kwargs.get('project'),
+            location=kwargs.get('location')
+        )
 
 
 class ProjectList(APIView):
@@ -20,17 +39,19 @@ class ProjectList(APIView):
 
     def post(self, request):
         serializer = ProjectSerializer(data=request.data)
+        
         if serializer.is_valid():
-            serializer.save(user=request.user, location=request.user.location)
+            print("about to save the new project serializer")
+            serializer.save(user=request.user, location_id=request.user.location.id)
 
-            activity_data = {"action": "new-project"}
-            activity_serializer = ActivitySerializer(data=activity_data)
-            if activity_serializer.is_valid():
-                activity_serializer.save(user=request.user, project_id=serializer.data['id'], location_id=serializer.data['location_id'], object_id=serializer.data['id'])
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED
-                    )
+            project = Project.objects.get(pk=serializer.data['id'])
+
+            activity_signal.send(sender=ProgressUpdate, action="project-created", user=request.user, project=project, location=request.user.location)
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
@@ -65,7 +86,7 @@ class ProjectDetail(APIView):
 
 class ProgressUpdateList(APIView):
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsProjectOwnerOrReadOnly]
     
     def get(self, request, project_pk):
         progress_updates = ProgressUpdate.objects.filter(project_id=project_pk)
@@ -77,14 +98,12 @@ class ProgressUpdateList(APIView):
         serializer = ProgressUpdateSerializer(data=request.data)
 
         project = Project.objects.get(pk=project_pk)
+        location = Location.objects.get(pk=project.location_id)
 
         if serializer.is_valid():
             serializer.save(project_id=project)
 
-            activity_data = {"action": "progress-update", "model": "ProgressUpdate"}
-            activity = ActivitySerializer(data=activity_data)
-            if activity.is_valid():
-                activity.save(user=request.user, project_id=project.id, location_id=project.location.id, object_id=serializer.data['id'])
+            activity_signal.send(sender=ProgressUpdate, action="progress-update", user=request.user, project=project, location=location)
 
             return Response(
                 serializer.data,
@@ -97,20 +116,20 @@ class ProgressUpdateList(APIView):
         
 
 class ProgressUpdateDetail(APIView):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsProjectOwnerOrReadOnly]
 
     def get_object(self, update_pk):
         try:
-            return Project.objects.get(pk=update_pk)
-        except Project.DoesNotExist:
+            return ProgressUpdate.objects.get(pk=update_pk)
+        except ProgressUpdate.DoesNotExist:
             raise Http404
     
-    def get(self, request, update_pk):
+    def get(self, request, project_pk, update_pk):
         progress_update = self.get_object(update_pk)
         serializer = ProgressUpdateSerializer(progress_update)
         return Response(serializer.data)
 
-    def put(self, request, update_pk):
+    def put(self, request, project_pk, update_pk):
         progress_update = self.get_object(update_pk)
         # Have to pass in as third agrument partial=True, otherwise the serializer will require a value to be submitted for EVERY property EVERY time.
         serializer = ProgressUpdateSerializer(progress_update, data=request.data, partial=True)
@@ -119,7 +138,7 @@ class ProgressUpdateDetail(APIView):
             return Response(serializer.data) # status=200 so no need to include - it's the default.
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, update_pk):
+    def delete(self, request, project_pk, update_pk):
         progress_update = self.get_object(update_pk)
         progress_update.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -127,41 +146,24 @@ class ProgressUpdateDetail(APIView):
 
 class PledgeList(APIView):
 
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def get(self, request, project_pk):
         pledges = Pledge.objects.filter(project_id=project_pk)
         serializer = PledgeSerializer(pledges, many=True)
         return Response(serializer.data)
 
-    # def post(self, request):
-    #     serializer = PledgeSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save(user=request.user)
-    #         return Response(
-    #             serializer.data,
-    #             status=status.HTTP_201_CREATED
-    #         )
-    #     return Response(
-    #         serializer.errors,
-    #         status=status.HTTP_400_BAD_REQUEST
-    #     )
-
     def post(self, request, project_pk):
-        pledge_serializer = PledgeSerializer(data=request.data)
-        if pledge_serializer.is_valid():
+        serializer = PledgeSerializer(data=request.data)
+        if serializer.is_valid():
             project = Project.objects.get(id=project_pk)
-            amt = project.current_amount + request.data['amount']
-            project_serializer = ProjectSerializer(project, {"current_amount": amt}, partial=True)
-
-            pledge_serializer.save(user=request.user, project_id=project_pk)
-            if project_serializer.is_valid():
-                project_serializer.save()
-            
-                return Response(
-                    pledge_serializer.data,
-                    status=status.HTTP_201_CREATED
-                )
+            serializer.save(user=request.user, project_id=project_pk, type_id=project.pledgetype.id)
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
         return Response(
-            pledge_serializer.errors,
+            serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -181,33 +183,15 @@ class PledgeDetail(APIView):
         serializer = PledgeSerializer(pledge)
         return Response(serializer.data)
 
-    # def put(self, request, pk):
-    #     pledge = self.get_object(pk)
-    #     # Have to pass in as third agrument partial=True, otherwise the serializer will require a value to be submitted for EVERY property EVERY time.
-    #     serializer = PledgeSerializer(pledge, data=request.data, partial=True)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data) # status=200 so no need to include - it's the default.
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # def delete(self, request, pk):
-    #     pledge = self.get_object(pk)
-    #     pledge.delete()
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
-
     def delete(self, request, project_pk, pledge_pk):
         pledge = self.get_object(pledge_pk)
-        project = Project.objects.get(id=project_pk)
-        amt = project.current_amount - pledge.amount
-        project_serializer = ProjectSerializer(project, {"current_amount": amt}, partial=True)
-        
-        if project_serializer.is_valid():
-            project_serializer.save()
-            pledge.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        pledge.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PledgetypeList(APIView):
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
 
     def get(self, request):
         pledgetypes = Pledgetype.objects.all()
@@ -231,6 +215,8 @@ class PledgetypeList(APIView):
 
 class PledgetypeDetail(APIView):
     
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
+
     def get_object(self, pk):
         try:
             return Pledgetype.objects.get(pk=pk)
@@ -260,6 +246,8 @@ class PledgetypeDetail(APIView):
 
 class ProjectCategoryList(APIView):
 
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
+
     def get(self, request):
         categories = ProjectCategory.objects.all()
         serializer = ProjectCategorySerializer(categories, many=True)
@@ -281,6 +269,8 @@ class ProjectCategoryList(APIView):
 
 
 class ProjectCategoryDetail(APIView):
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
     
     def get_object(self, pk):
         try:
@@ -311,7 +301,7 @@ class ProjectCategoryDetail(APIView):
 
 class LocationList(APIView):
 
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
 
     def get(self, request):
         location = Location.objects.all()
@@ -332,13 +322,10 @@ class LocationList(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-        # def get_object(self):
-        #     obj = get_object_or_404(self.get_queryset(), pk=self.kwargs["pk"])
-        #     self.check_object_permissions(self.request, obj)
-        #     return obj
-
 
 class LocationDetail(APIView):
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
     
     def get_object(self, pk):
         try:
@@ -376,36 +363,46 @@ class LocationDetail(APIView):
 
 class ProjectListByLocation(APIView):
 
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def get(self, request, pk):
         projects = Project.objects.filter(location=pk)
-        serializer = ProjectSerializer(projects, many=True)
+        open_projects = [item for item in projects if item.is_open]
+        serializer = ProjectSerializer(open_projects, many=True)
         return Response(serializer.data)
 
 
 class ProjectListByLocationAndCategory(APIView):
 
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def get(self, request, loc_pk, cat_pk):
         projects = Project.objects.filter(location=loc_pk, category=cat_pk)
-        serializer = ProjectSerializer(projects, many=True)
+        open_projects = [item for item in projects if item.is_open]
+        serializer = ProjectSerializer(open_projects, many=True)
         return Response(serializer.data)
 
 class ProjectListFiltered(APIView):
 
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    def get(self, request):
+    def get(self, request, loc_pk):
 
-        user_categories = ProjectCategory.objects.filter(customuser__id=self.request.user.id)
+        if request.user.is_authenticated:
+            user_categories = ProjectCategory.objects.filter(customuser__id=self.request.user.id)
 
-        projects = Project.objects.none()
+            projects = Project.objects.filter(location=loc_pk)
 
-         # adding the query sets together using the "|" 
-        for cat_id in user_categories:
-            projects = projects |Project.objects.filter(category=cat_id)
+            # adding the query sets together using the "|" 
+            for cat_id in user_categories:
+                projects = projects |Project.objects.filter(category=cat_id)
 
-        serializer = ProjectSerializer(projects, many=True)
-        return Response(serializer.data)
+            open_projects = [item for item in projects if item.is_open]
+            serializer = ProjectSerializer(open_projects, many=True)
 
+            return Response(serializer.data)
+        
+        raise Http404
 
 # class LocationSLUGDetail(APIView):
 
@@ -417,51 +414,24 @@ class ProjectListFiltered(APIView):
 
 class AllActivity(APIView):
 
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def get(self, request):
         activities = Activity.objects.all()
         serializer = ActivitySerializer(activities, many=True)
         return Response(serializer.data)
 
 class LocationActivity(APIView):
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
     def get(self, request, pk):
-        
-        activity_feed = Activity.objects.filter(location=pk).order_by('-datetime')
-        activity_data = []
-        for item in activity_feed:
+        activity_feed = Activity.objects.filter(location=pk).order_by('-datetime')[:10]
 
-            if item.action == "progress-update":
-                dict = { "action": item.action }
-                progress_update = ProgressUpdate.objects.get(pk=item.object_id)
-                serializer = ProgressUpdateSerializer(progress_update)
+        serializer = ActivityDetailSerializer(activity_feed, many=True)
 
-                for key in serializer.data:
-                    dict[str(key)] = serializer.data[str(key)]
+        return Response(serializer.data)
 
-                project = Project.objects.get(pk=item.project_id)
-                project_serializer = ProjectSerializer(project)
-                dict["project"] = project_serializer.data
-                
-                activity_data.append(dict)
+    
 
-            if item.action == "new-project":
-                dict = { "action": item.action }
-                project = Project.objects.get(pk=item.object_id)
-                serializer = ProjectSerializer(project)
-
-                for key in serializer.data:
-                    dict[str(key)] = serializer.data[str(key)]
-
-                activity_data.append(dict)
-
-            if item.action == "milestone":
-                dict = { "action": item.action }
-                project = Project.objects.get(pk=item.object_id)
-                serializer = ProjectSerializer(project)
-
-                for key in serializer.data:
-                    dict[str(key)] = serializer.data[str(key)]
-
-                activity_data.append(dict)
-
-        return Response(activity_data)
 
