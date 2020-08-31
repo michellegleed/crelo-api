@@ -210,7 +210,8 @@ class PledgeList(APIView):
             amt = project.current_amount + request.data['amount']
             project_serializer = ProjectSerializer(project, {"current_amount": amt}, partial=True)
 
-            pledge_serializer.save(user=request.user, project_id=project_pk)
+            pledge_serializer.save(user=request.user, project_id=project_pk, type_id=project.pledgetype.id)
+
             if project_serializer.is_valid():
                 project_serializer.save()
             
@@ -435,7 +436,7 @@ class LocationDetail(APIView):
 class ProjectListByLocation(APIView):
 
     def get(self, request, pk):
-        projects = Project.objects.filter(location=pk)
+        projects = Project.objects.filter(location=pk, is_open=True)
         serializer = ProjectSerializer(projects, many=True)
         return Response(serializer.data)
 

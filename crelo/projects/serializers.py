@@ -43,7 +43,8 @@ class PledgeSerializer(serializers.Serializer):
     user = serializers.ReadOnlyField(source='user.id')
     project_id = serializers.ReadOnlyField(source='project.id')
     date_created = serializers.ReadOnlyField()
-    type_id = serializers.IntegerField()
+    # type_id = serializers.IntegerField()
+    type_id = serializers.ReadOnlyField(source='project.pledgetype.id')
 
     def create(self, validated_data):
         return Pledge.objects.create(**validated_data)
@@ -130,6 +131,7 @@ class ProjectSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     venue = serializers.CharField(max_length=200, default="")
     description = serializers.CharField(max_length=800)
+    pledgetype = serializers.PrimaryKeyRelatedField(queryset=Pledgetype.objects.all())
     goal_amount = serializers.IntegerField()
     current_amount = serializers.IntegerField(default=0)
     image = serializers.URLField()
@@ -137,7 +139,7 @@ class ProjectSerializer(serializers.Serializer):
     date_created = serializers.ReadOnlyField()
     user = serializers.ReadOnlyField(source='user.id')
     due_date = serializers.DateTimeField()
-    category_id = serializers.IntegerField()
+    category_id = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
     location_id = serializers.ReadOnlyField(source='user.location.id')
     next_milestone = serializers.IntegerField(default=25)
 

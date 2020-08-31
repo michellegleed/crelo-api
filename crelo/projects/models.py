@@ -52,6 +52,9 @@ class Project(models.Model):
         on_delete=models.CASCADE, 
         related_name='location_projects')
     next_milestone = models.IntegerField(default=25, blank=True)
+    pledgetype = models.ForeignKey(
+        Pledgetype, 
+        on_delete=models.PROTECT)
 
 
 class Pledge(models.Model):
@@ -157,3 +160,98 @@ class Activity(models.Model):
 #     "due_date": "2020-03-20T14:28:23.382748Z",
 #     "category_id": 1
 # }
+
+# {
+#         "title": "Music on the Foreshore",
+#         "venue": "",
+#         "description": "Pledge to come down and play music on the riverbank on a Saturday afternoon. Each set can last between 30 and 60 minutes. Bands and solo artists.",
+#         "goal_amount": 2200,
+#         "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80",
+#         "due_date": "2020-03-20T14:28:23.382748Z",
+#         "category_id": 3
+#     },
+    # {
+    #     "title": "Cat Fishing Group",
+    #     "venue": "",
+    #     "description": "Do you know a cat that spends too much time on the internet using fake social media accounts to stalk their exes? We are encouraging all neighborhood cats to learn real fishing. They'll get some much-needed outdoor time and learn how to catch their own food!",
+    #     "goal_amount": 750,
+    #     "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80",
+    #     "due_date": "2020-03-20T14:28:23.382748Z",
+    #     "category_id": 1
+    # }
+
+# {
+#         "amount": 75,
+#         "comment": "LOVE this idea!! My dog is the worst driver. It's unbelievable that she's allowed behind the wheel without lessons.",
+#         "anonymous": true
+#     },
+#     {
+#         "id": 2,
+#         "amount": 75,
+#         "comment": "YES yes yes. i LOVE driving.",
+#         "anonymous": false,
+#         "user": 2,
+#         "project_id": 1,
+#         "date_created": "2020-08-25T13:50:17.201660Z",
+#         "type_id": 2
+#     },
+#     {
+#         "id": 5,
+#         "amount": 500,
+#         "comment": "Genius!",
+#         "anonymous": true,
+#         "user": 5,
+#         "project_id": 1,
+#         "date_created": "2020-08-29T10:52:43.369387Z",
+#         "type_id": 2
+#     },
+
+
+    # {
+    #     "id": 1,
+    #     "is_admin": true,
+    #     "username": "michelle",
+    #     "email": "mich@email.com",
+    #     "location_id": 1,
+    #     "favourite_categories": [
+    #         1
+    #     ]
+    # },
+    # {
+    #     "id": 2,
+    #     "is_admin": false,
+    #     "username": "evie",
+    #     "email": "evie@email.com",
+    #     "location_id": 1,
+    #     "favourite_categories": []
+    # }
+    #   {
+    #     "id": 5,
+    #     "is_admin": false,
+    #     "username": "billy",
+    #     "email": "billy@email.com",
+    #     "location_id": 1,
+    #     "favourite_categories": []
+    # }
+    #    {
+#         "id": 1,
+#         "date_posted": "2020-08-26T10:23:34.701803Z",
+#         "content": "Hey everyone! Here's an update on our project."
+        # }
+
+    #         {
+    #     "id": 1,
+    #     "name": "Education"
+    # },
+    # {
+    #     "id": 3,
+    #     "name": "Arts"
+    # },
+    # {
+    #     "id": 4,
+    #     "name": "Natural Landscape"
+    # },
+    # {
+    #     "id": 5,
+    #     "name": "Kids"
+    # }
