@@ -15,7 +15,7 @@ urlpatterns = [
     # Project views
     path('projects/', views.ProjectList.as_view()),
     path('locations/<int:pk>/categories/', views.ProjectListByLocation.as_view()),
-    path('locations/<int:loc_pk>/categories/<int:cat_pk>', views.ProjectListByLocationAndCategory.as_view()),
+    path('locations/<int:loc_pk>/categories/<int:cat_pk>/', views.ProjectListByLocationAndCategory.as_view()),
     path('locations/<int:loc_pk>/categories/favourites/', views.ProjectListFiltered.as_view()),
 
     # Project detail views
