@@ -11,6 +11,8 @@ class CustomUserSerializer(serializers.Serializer):
     email = serializers.CharField(max_length=200)
     password = serializers.CharField(write_only=True)
     location_id = serializers.IntegerField()
+    bio = serializers.CharField(max_length=2000)
+    image = serializers.URLField()
     favourite_categories = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all(), many=True)
 
     def create(self, validated_data):
@@ -28,6 +30,8 @@ class CustomUserSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         instance.username = validated_data.get('username', instance.username)
         instance.location_id = validated_data.get('location_id', instance.location_id)
+        instance.bio = validated_data.get('bio', instance.bio),
+        instance.image = validated_data.get('image', instance.image),
 
         if 'favourite_categories' in validated_data:
             cats = validated_data['favourite_categories']
