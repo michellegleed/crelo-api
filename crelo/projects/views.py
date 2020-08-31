@@ -367,7 +367,8 @@ class ProjectListByLocation(APIView):
 
     def get(self, request, pk):
         projects = Project.objects.filter(location=pk)
-        serializer = ProjectSerializer(projects, many=True)
+        open_projects = [item for item in projects if item.is_open]
+        serializer = ProjectSerializer(open_projects, many=True)
         return Response(serializer.data)
 
 
@@ -377,25 +378,28 @@ class ProjectListByLocationAndCategory(APIView):
 
     def get(self, request, loc_pk, cat_pk):
         projects = Project.objects.filter(location=loc_pk, category=cat_pk)
-        serializer = ProjectSerializer(projects, many=True)
+        open_projects = [item for item in projects if item.is_open]
+        serializer = ProjectSerializer(open_projects, many=True)
         return Response(serializer.data)
 
 class ProjectListFiltered(APIView):
 
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-    def get(self, request):
+    def get(self, request, loc_pk):
 
         if request.user.is_authenticated:
             user_categories = ProjectCategory.objects.filter(customuser__id=self.request.user.id)
 
-            projects = Project.objects.none()
+            projects = Project.objects.filter(location=loc_pk)
 
             # adding the query sets together using the "|" 
             for cat_id in user_categories:
                 projects = projects |Project.objects.filter(category=cat_id)
 
-            serializer = ProjectSerializer(projects, many=True)
+            open_projects = [item for item in projects if item.is_open]
+            serializer = ProjectSerializer(open_projects, many=True)
+
             return Response(serializer.data)
         
         raise Http404
@@ -422,7 +426,7 @@ class LocationActivity(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     
     def get(self, request, pk):
-        activity_feed = Activity.objects.filter(location=pk).order_by('-datetime')
+        activity_feed = Activity.objects.filter(location=pk).order_by('-datetime')[:10]
 
         serializer = ActivityDetailSerializer(activity_feed, many=True)
 

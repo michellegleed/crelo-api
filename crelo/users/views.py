@@ -134,25 +134,18 @@ class UserAddCategory(APIView):
         except CustomUser.DoesNotExist:
             raise Http404
 
-    def put(self, request, pk):
+    def get(self, request, pk):
         user = self.get_object()
 
         # if you don't call check_object_permissions here, the view won't check if the user has the right permissions!
         self.check_object_permissions(request, user)
 
-        current_cats = user.favourite_categories
-
         cat_to_add = ProjectCategory.objects.get(pk=pk)
+        user.favourite_categories.add(cat_to_add)
 
-        current_cats += [cat_to_add]
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data)
 
-        user_serializer = CustomUserSerializer(user, data=current_cats, partial=True)
-
-        if user_serializer.is_valid():
-            user_serializer.save()
-            response_data = user_serializer.data
-            return Response(response_data)
-        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserRemoveCategory(APIView):
     permission_classes = [IsLoggedInUser]
@@ -163,27 +156,14 @@ class UserRemoveCategory(APIView):
         except CustomUser.DoesNotExist:
             raise Http404
 
-    def put(self, request, pk):
+    def get(self, request, pk):
         user = self.get_object()
 
         # if you don't call check_object_permissions here, the view won't check if the user has the right permissions!
         self.check_object_permissions(request, user)
 
-        current_cats = user.favourite_categories
+        cat_to_remove = ProjectCategory.objects.get(pk=pk)
+        user.favourite_categories.remove(cat_to_remove)
 
-        cat_to_add = ProjectCategory.objects.get(pk=pk)
-
-        
-
-        user_serializer = CustomUserSerializer(user, data=current_cats, partial=True)
-
-        if user_serializer.is_valid():
-            user_serializer.save()
-            pledges = Pledge.objects.filter(user_id=user.id)
-            pledge_serializer = PledgeSerializer(pledges, many=True)
-            response_data = { 
-                "user": user_serializer.data, 
-                "pledges": pledge_serializer.data 
-            }
-            return Response(response_data)
-        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data)

@@ -158,7 +158,7 @@ class ProjectSerializer(serializers.Serializer):
 
     def get_check_close_to_due_date(self, instance):
         if instance.is_open:
-            if not instance.last_chance_triggered:
+            if instance.last_chance_triggered == False:
                 if instance.due_date - timedelta(days=5) < now():
                     location = Location.objects.get(pk=instance.location_id)
 
