@@ -3,9 +3,13 @@ from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, Prog
 
 # Importing this to check whether project has passed due date and should be closed.
 from django.utils.timezone import now
+from datetime import timedelta
 
 # Have to use signals in the serializers just for the milestone serializer method on ProjectSerializer.
 from django.dispatch import receiver, Signal
+
+# to calculate current amount pledged on Project serializer
+from django.db.models import Avg, Count, Min, Sum
 
 
 class ProjectCategorySerializer(serializers.Serializer):
@@ -90,6 +94,9 @@ class LocationSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
         # instance.slug_name = validated_data.get('slug_name', instance.slug_name)
+        instance.save()
+        return instance
+
      
 
 class ProgressUpdateSerializer(serializers.Serializer):
@@ -97,6 +104,7 @@ class ProgressUpdateSerializer(serializers.Serializer):
     project_id = serializers.ReadOnlyField(source='project.id')
     date_posted = serializers.ReadOnlyField()
     content = serializers.CharField(max_length=2000)
+    user = serializers.ReadOnlyField(source='project.user.id')
 
     def create(self, validated_data):
         return ProgressUpdate.objects.create(**validated_data)
@@ -133,36 +141,44 @@ class ProjectSerializer(serializers.Serializer):
     description = serializers.CharField(max_length=800)
     pledgetype = serializers.PrimaryKeyRelatedField(queryset=Pledgetype.objects.all())
     goal_amount = serializers.IntegerField()
-    current_amount = serializers.IntegerField(default=0)
     image = serializers.URLField()
-    is_open = serializers.BooleanField(default=True)
+    is_open = serializers.ReadOnlyField()
     date_created = serializers.ReadOnlyField()
     user = serializers.ReadOnlyField(source='user.id')
     due_date = serializers.DateTimeField()
-    category_id = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
+    category = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
     location_id = serializers.ReadOnlyField(source='user.location.id')
-    next_milestone = serializers.IntegerField(default=25)
+    last_milestone = serializers.IntegerField(default=0)
+    last_chance_triggered = serializers.BooleanField()
+    current_amount_pledged = serializers.ReadOnlyField()
+    current_percentage_pledged = serializers.ReadOnlyField()
 
-    check_is_open = serializers.SerializerMethodField()
     check_for_milestone = serializers.SerializerMethodField()
+    check_close_to_due_date = serializers.SerializerMethodField()
 
-    def get_check_is_open(self, instance):
+    def get_check_close_to_due_date(self, instance):
         if instance.is_open:
-            instance.is_open = instance.due_date > now()
-            instance.save()
-            return instance
+            if not instance.last_chance_triggered:
+                if instance.due_date - timedelta(days=5) < now():
+                    location = Location.objects.get(pk=instance.location_id)
+
+                    activity_signal.send(sender=Project, action="last-chance", user=instance.user, project=instance, location=location)
+
+                    instance.last_chance_triggered = True
+
+                    instance.save()
 
     def get_check_for_milestone(self, instance):
-        current_percent = instance.current_amount / instance.goal_amount * 100
-        if current_percent > float(instance.next_milestone):
-            instance.next_milestone += 25
+        if instance.is_open:
+            if instance.current_percentage_pledged > float(instance.last_milestone + 25):
+                instance.last_milestone += 25
 
-            location = Location.objects.get(pk=instance.location_id)
+                location = Location.objects.get(pk=instance.location_id)
 
-            activity_signal.send(sender=Project, action="milestone", user=instance.user, project=instance, location=location)
+                activity_signal.send(sender=Project, action="milestone", user=instance.user, project=instance, location=location)
 
-            instance.save()
-    
+                instance.save()
+        
     # this func is required to store the data sent in the POST request to the database..
     def create(self, validated_data):
         # the "**"" unpacks the validated_Data
@@ -173,10 +189,10 @@ class ProjectSerializer(serializers.Serializer):
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
         instance.goal_amount = validated_data.get('goal_amount', instance.goal_amount)
-        instance.current_amount = validated_data.get('current_amount', instance.current_amount)
+        # instance.current_amount = validated_data.get('current_amount', instance.current_amount)
         instance.image = validated_data.get('image', instance.image)
-        instance.is_open = validated_data.get('is_open', instance.is_open)
-        instance.date_created = validated_data.get('date_created', instance.date_created)
+        # instance.is_open = validated_data.get('is_open', instance.is_open)
+        # instance.date_created = validated_data.get('date_created', instance.date_created)
         instance.due_date = validated_data.get('due_date', instance.due_date)
         instance.category_id = validated_data.get('category_id', instance.category_id)
         # instance.location_id = validated_data.get('location_id', instance.location_id)
@@ -195,3 +211,6 @@ class ProjectDetailSerializer(ProjectSerializer):
     def get_pledges(self, instance):
          ordered_queryset = instance.pledges.all().order_by('-amount','-date_created')
          return PledgeSerializer(ordered_queryset, many=True, context=self.context).data
+
+class ActivityDetailSerializer(ActivitySerializer):
+    project = ProjectSerializer(read_only=True)

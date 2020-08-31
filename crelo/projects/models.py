@@ -1,12 +1,17 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
+from django.utils.timezone import now
+from datetime import timedelta
+
+# to calculate current amount pledged on Project serializer
+from django.db.models import Avg, Count, Min, Sum
 
 class ProjectCategory(models.Model):
     name = models.CharField(max_length=80)
 
-    def __str__(self):
-        return self.username
+    # def __str__(self):
+    #     return self.name
     
 
 class Location(models.Model):
@@ -19,12 +24,6 @@ class Location(models.Model):
 
 class Pledgetype(models.Model):
     type = models.CharField(max_length=50)
-
-
-class ProgressUpdate(models.Model):
-    project_id = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='updates')
-    date_posted = models.DateTimeField(auto_now_add=True)
-    content = models.TextField()
     
 
 class Project(models.Model):
@@ -34,7 +33,6 @@ class Project(models.Model):
     goal_amount = models.IntegerField()
     current_amount = models.IntegerField(default=0, blank=True)
     image = models.URLField()
-    is_open = models.BooleanField(default=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
         get_user_model(), 
@@ -51,10 +49,27 @@ class Project(models.Model):
         Location, 
         on_delete=models.CASCADE, 
         related_name='location_projects')
-    next_milestone = models.IntegerField(default=25, blank=True)
+    last_milestone = models.IntegerField(default=0, blank=True)
     pledgetype = models.ForeignKey(
         Pledgetype, 
         on_delete=models.PROTECT)
+    # Need to keep track of this so the activity object for "last-chance" to pledge is only created once.
+    last_chance_triggered = models.BooleanField(default=False, blank=True)
+
+    @property
+    def is_open(self):
+        return self.due_date > now()
+    
+    @property
+    def current_amount_pledged(self):
+        current_amt = self.pledges.aggregate(value=Sum('amount'))
+        return current_amt['value']
+
+    @property
+    def current_percentage_pledged(self):
+        if self.current_amount_pledged:
+            return int(self.current_amount_pledged / self.goal_amount * 100)
+        return 0
 
 
 class Pledge(models.Model):
@@ -78,18 +93,20 @@ class Pledge(models.Model):
         related_name='pledgetype'
     )
 
-# Activity possible actions: 
-    # - project reaches goal amount (and 25%, 50% and 100%)
-    # - creator posts a progress update
-    # - someone comments on a project you've pledged to'
-    # - new project created
+class ProgressUpdate(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='updates')
+    date_posted = models.DateTimeField(auto_now_add=True)
+    content = models.TextField()
 
+# Activity possible actions: 
+    # - project reaches goal amount (and 25%, 50% and 75%)
+    # - creator posts a progress update
+    # - new project created
+    # - last chance to pledge before closing - maybe @ 5 days to go.
 
 class Activity(models.Model):
     action = models.CharField(max_length=200)
     datetime = models.DateTimeField(auto_now_add=True)
-    # object_model = models.CharField(max_length=100)
-    # object_id = models.IntegerField()
     
     user = models.ForeignKey(
         get_user_model(), 
@@ -106,6 +123,7 @@ class Activity(models.Model):
         on_delete=models.CASCADE, 
         related_name='project_activity'
     )
+
     
 
 # SHELL COMMANDS #
@@ -185,16 +203,16 @@ class Activity(models.Model):
 #         "comment": "LOVE this idea!! My dog is the worst driver. It's unbelievable that she's allowed behind the wheel without lessons.",
 #         "anonymous": true
 #     },
-#     {
-#         "id": 2,
-#         "amount": 75,
-#         "comment": "YES yes yes. i LOVE driving.",
-#         "anonymous": false,
-#         "user": 2,
-#         "project_id": 1,
-#         "date_created": "2020-08-25T13:50:17.201660Z",
-#         "type_id": 2
-#     },
+    # {
+    #     "id": 2,
+    #     "amount": 75,
+    #     "comment": "YES yes yes. i LOVE driving.",
+    #     "anonymous": false,
+    #     "user": 2,
+    #     "project_id": 1,
+    #     "date_created": "2020-08-25T13:50:17.201660Z",
+    #     "type_id": 2
+    # },
 #     {
 #         "id": 5,
 #         "amount": 500,
