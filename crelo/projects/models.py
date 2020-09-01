@@ -226,11 +226,12 @@ class Activity(models.Model):
 
 
     # {
-    #     "id": 1,
-    #     "is_admin": true,
-    #     "username": "michelle",
-    #     "email": "mich@email.com",
-    #     "location_id": 1,
+        # "id": 1,
+        # "is_admin": true,
+        # "username": "michelle",
+        # "email": "mich@email.com",
+        # "location_id": 1,
+        # "password": "test4321",
     #     "favourite_categories": [
     #         1
     #     ]
