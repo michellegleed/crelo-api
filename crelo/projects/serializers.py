@@ -77,25 +77,25 @@ class ActivitySerializer(serializers.Serializer):
         return Activity.objects.create(**validated_data)
 
 
-class LocationSerializer(serializers.Serializer):
-    id = serializers.ReadOnlyField()
-    name = serializers.CharField(max_length=200)
-    # slug_name = serializers.CharField(max_length=50)
+# class LocationSerializer(serializers.Serializer):
+#     id = serializers.ReadOnlyField()
+#     name = serializers.CharField(max_length=200)
+#     # slug_name = serializers.CharField(max_length=50)
 
-    activity = serializers.SerializerMethodField()
+#     activity = serializers.SerializerMethodField()
 
-    def get_activity(self, instance):
-         ordered_queryset = instance.location_activity.all().order_by('-datetime')
-         return ActivitySerializer(ordered_queryset, many=True, context=self.context).data
+#     def get_activity(self, instance):
+#          ordered_queryset = instance.location_activity.all().order_by('-datetime')
+#          return ActivitySerializer(ordered_queryset, many=True, context=self.context).data
 
-    def create(self, validated_data):
-        return Location.objects.create(**validated_data)
+#     def create(self, validated_data):
+#         return Location.objects.create(**validated_data)
 
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        # instance.slug_name = validated_data.get('slug_name', instance.slug_name)
-        instance.save()
-        return instance
+#     def update(self, instance, validated_data):
+#         instance.name = validated_data.get('name', instance.name)
+#         # instance.slug_name = validated_data.get('slug_name', instance.slug_name)
+#         instance.save()
+#         return instance
 
      
 
@@ -212,5 +212,27 @@ class ProjectDetailSerializer(ProjectSerializer):
          ordered_queryset = instance.pledges.all().order_by('-amount','-date_created')
          return PledgeSerializer(ordered_queryset, many=True, context=self.context).data
 
+
 class ActivityDetailSerializer(ActivitySerializer):
     project = ProjectSerializer(read_only=True)
+
+
+class LocationSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    name = serializers.CharField(max_length=200)
+    # slug_name = serializers.CharField(max_length=50)
+
+    activity = serializers.SerializerMethodField()
+
+    def get_activity(self, instance):
+         ordered_queryset = instance.location_activity.all().order_by('-datetime')
+         return ActivityDetailSerializer(ordered_queryset, many=True, context=self.context).data
+
+    def create(self, validated_data):
+        return Location.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        # instance.slug_name = validated_data.get('slug_name', instance.slug_name)
+        instance.save()
+        return instance
