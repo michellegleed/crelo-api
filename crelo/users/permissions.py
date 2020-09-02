@@ -18,5 +18,6 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     message = "That particular superpower is for Admins only. Soz!"
 
     def has_permission(self, request, view):
-
-        return True
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_admin
