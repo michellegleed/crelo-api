@@ -301,7 +301,7 @@ class ProjectCategoryDetail(APIView):
 
 class LocationList(APIView):
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
 
     def get(self, request):
         location = Location.objects.all()
@@ -325,7 +325,7 @@ class LocationList(APIView):
 
 class LocationDetail(APIView):
 
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
     
     def get_object(self, pk):
         try:
