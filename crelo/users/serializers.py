@@ -25,7 +25,7 @@ class CustomUserSerializer(serializers.Serializer):
             image = ""
         )
         new_user.set_password(validated_data['password'])
-        # new_user.set_favourite_categories.set(None)
+
         new_user.save()
 
         return new_user
