@@ -1,1 +1,1 @@
-web: gunicorn --pythonpath drf-project drf-project.wsgi --log-file -
+web: gunicorn --pythonpath crelo crelo.wsgi --log-file -
