@@ -130,3 +130,46 @@ class AuthenticatedUserProfile(APIView):
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class UserAddCategory(APIView):
+
+    permission_classes = [IsLoggedInUser]
+
+    def get_object(self):
+        try:
+            return CustomUser.objects.get(pk=self.request.user.id)
+        except CustomUser.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        user = self.get_object()
+
+        # if you don't call check_object_permissions here, the view won't check if the user has the right permissions!
+        self.check_object_permissions(request, user)
+
+        cat_to_add = ProjectCategory.objects.get(pk=pk)
+        user.favourite_categories.add(cat_to_add)
+
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data)
+
+
+class UserRemoveCategory(APIView):
+    permission_classes = [IsLoggedInUser]
+
+    def get_object(self):
+        try:
+            return CustomUser.objects.get(pk=self.request.user.id)
+        except CustomUser.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        user = self.get_object()
+
+        # if you don't call check_object_permissions here, the view won't check if the user has the right permissions!
+        self.check_object_permissions(request, user)
+
+        cat_to_remove = ProjectCategory.objects.get(pk=pk)
+        user.favourite_categories.remove(cat_to_remove)
+
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data)
