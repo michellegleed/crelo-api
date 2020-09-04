@@ -149,7 +149,7 @@ class ProjectSerializer(serializers.Serializer):
     category = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
     location_id = serializers.ReadOnlyField(source='user.location.id')
     last_milestone = serializers.IntegerField(default=0)
-    last_chance_triggered = serializers.BooleanField()
+    last_chance_triggered = serializers.BooleanField(default=False)
     current_amount_pledged = serializers.ReadOnlyField()
     current_percentage_pledged = serializers.ReadOnlyField()
 

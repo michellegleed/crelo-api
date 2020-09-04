@@ -21,8 +21,6 @@ class CustomUserSerializer(serializers.Serializer):
             username=validated_data['username'],
             email=validated_data['email'],
             location_id=validated_data['location_id']
-            # bio = "",
-            # image = ""
         )
         new_user.set_password(validated_data['password'])
 
