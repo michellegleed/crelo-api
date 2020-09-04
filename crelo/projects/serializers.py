@@ -170,12 +170,12 @@ class ProjectSerializer(serializers.Serializer):
 
     def get_check_for_milestone(self, instance):
         if instance.is_open:
-            if instance.current_percentage_pledged > float(instance.last_milestone + 25):
+            while instance.current_percentage_pledged > float(instance.last_milestone + 25):
                 instance.last_milestone += 25
 
                 location = Location.objects.get(pk=instance.location_id)
 
-                activity_signal.send(sender=Project, action="milestone", user=instance.user, project=instance, location=location)
+                activity_signal.send(sender=Project, action=f"milestone-{instance.last_milestone}", user=instance.user, project=instance, location=location)
 
                 instance.save()
         
