@@ -101,7 +101,7 @@ class ProgressUpdateList(APIView):
         location = Location.objects.get(pk=project.location_id)
 
         if serializer.is_valid():
-            serializer.save(project_id=project)
+            serializer.save(project_id=project.id)
 
             activity_signal.send(sender=ProgressUpdate, action="progress-update", user=request.user, project=project, location=location)
 

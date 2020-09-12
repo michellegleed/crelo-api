@@ -156,6 +156,10 @@ class Activity(models.Model):
 # }
 
 # {
+# "content": "Hi Everyone, quick update - we have changed the meeting point to the car park at Curtin Rowing Club. Just watch out for kids and dogs - it's a busy area by the playground and we don't want any accidents before you even get to start your driving lessons!"
+# }
+
+# {
     # "username": "ruby",
     # "email": "ruby@gmail.com",
     # "password": "test4321",
@@ -227,12 +231,12 @@ class Activity(models.Model):
 
 
     # {
-        # "id": 1,
-        # "is_admin": true,
-        # "username": "michelle",
-        # "email": "mich@email.com",
-        # "location_id": 1,
-        # "password": "test4321",
+    #     "id": 1,
+    #     "is_admin": true,
+    #     "username": "michelle",
+    #     "email": "mich@email.com",
+    #     "location_id": 1,
+    #     "password": "test4321",
     #     "favourite_categories": [
     #         1
     #     ]
