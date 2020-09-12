@@ -187,6 +187,7 @@ class ProjectSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
+        instance.venue = validated_data.get('venue', instance.venue)
         instance.description = validated_data.get('description', instance.description)
         instance.goal_amount = validated_data.get('goal_amount', instance.goal_amount)
         # instance.current_amount = validated_data.get('current_amount', instance.current_amount)
