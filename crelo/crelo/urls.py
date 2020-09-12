@@ -20,6 +20,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 urlpatterns = [
     path('', include('projects.urls')),
     path('', include('users.urls')),
+    
     # this is so we can log in as a superuser in the DRF backend API view thing.
     path('api-auth/', include('rest_framework.urls')),
 

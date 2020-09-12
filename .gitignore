@@ -1,6 +1,10 @@
 v-env/*
 __pycache__/*
+__pycache__
 *.sqlite3
 *.vscode
 staticfiles
+crelo/projects/__pycache__/serializers.cpython-38.pyc
+crelo/projects/__pycache__/urls.cpython-38.pyc
 crelo/projects/__pycache__/*
+crelo/users/__pycache__/*
