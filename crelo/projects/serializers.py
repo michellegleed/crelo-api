@@ -220,7 +220,7 @@ class ProjectDetailSerializer(ProjectSerializer):
 
 
 class ActivityDetailSerializer(ActivitySerializer):
-    project = ProjectSerializer(read_only=True)
+    project = ProjectDetailSerializer(read_only=True)
 
 
 class LocationSerializer(serializers.Serializer):
