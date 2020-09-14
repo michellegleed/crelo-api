@@ -14,12 +14,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from django.contrib import admin
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path('', include('projects.urls')),
     path('', include('users.urls')),
+    path('admin/', admin.site.urls),
     
     # this is so we can log in as a superuser in the DRF backend API view thing.
     path('api-auth/', include('rest_framework.urls')),
