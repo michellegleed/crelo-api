@@ -12,7 +12,7 @@ class CustomUser(AbstractUser):
     bio = models.TextField(blank=True, default="")
     image = models.URLField(blank=True, default="")
     is_admin = models.BooleanField(blank=True, default=False)
-    favourite_categories = models.ManyToManyField(ProjectCategory, related_name='customuser', blank=True)
+    # favourite_categories = models.ManyToManyField(ProjectCategory, related_name='customuser', blank=True)
 
     def __str__(self):
         return self.username
