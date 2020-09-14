@@ -16,8 +16,7 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
 class IsAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        # if request.method in permissions.SAFE_METHODS:
-        #     return True
-        # return request.user.is_admin
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_admin
 
-        return True
