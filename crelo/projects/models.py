@@ -71,7 +71,7 @@ class Project(models.Model):
     @property
     def current_percentage_pledged(self):
         if self.current_amount_pledged:
-            return int(self.current_amount_pledged / self.goal_amount * 100)
+            return round(self.current_amount_pledged / self.goal_amount * 100, 1)
         return 0
 
 
