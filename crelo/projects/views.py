@@ -3,7 +3,7 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
-from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer, ProgressUpdateSerializer, ActivitySerializer, ActivityDetailSerializer
+from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer, ProgressUpdateSerializer, ActivitySerializer, ActivityDetailSerializer, ProjectAnalyticsSerializer
 
 from django.dispatch import receiver, Signal
 
@@ -71,8 +71,19 @@ class ProjectDetail(APIView):
     
     def get(self, request, pk):
         project = self.get_object(pk)
-        serializer = ProjectDetailSerializer(project)
-        return Response(serializer.data)
+        
+        if project.user == request.user:
+            serializer = ProjectAnalyticsSerializer(project)
+            return Response(serializer.data)
+
+        else:
+            print("another user is viewing your project!")
+            project.view_count = project.view_count + 1
+            project.save() 
+
+            serializer = ProjectDetailSerializer(project)
+
+            return Response(serializer.data)
 
     def put(self, request, pk):
         project = self.get_object(pk)

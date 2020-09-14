@@ -187,6 +187,7 @@ class ProjectSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
+        instance.venue = validated_data.get('venue', instance.venue)
         instance.description = validated_data.get('description', instance.description)
         instance.goal_amount = validated_data.get('goal_amount', instance.goal_amount)
         # instance.current_amount = validated_data.get('current_amount', instance.current_amount)
@@ -218,9 +219,43 @@ class ProjectDetailSerializer(ProjectSerializer):
          ordered_queryset = instance.pledges.all().order_by('-amount','-date_created')
          return PledgeSerializer(ordered_queryset, many=True, context=self.context).data
 
+    # increment_project_views = serializers.SerializerMethodField()
+
+    # the view checks to make sure the logged in user is not the project creator before running this increment_project_views()    
+    # def get_increment_project_views(self, instance):
+    #     instance.project_views = instance.project_views + 1
+    #     instance.save()
+        
+
+
+class ProjectAnalyticsSerializer(ProjectDetailSerializer):
+    view_count = serializers.IntegerField()
+    pledge_count = serializers.SerializerMethodField()
+    conversion_rate = serializers.SerializerMethodField()
+    average_pledge = serializers.SerializerMethodField()
+
+    def get_pledge_count(self, instance):
+        if instance.current_amount_pledged != None:
+            return instance.pledges.count()
+
+    def get_average_pledge(self, instance):
+        if instance.current_amount_pledged != None:
+            # instance.average_pledge = instance.current_amount_pledged / len(instance.pledges)
+            # instance.save()
+            return round(instance.current_amount_pledged / instance.pledges.count(), 2)
+        return 0
+            
+    def get_conversion_rate(self, instance):
+        if instance.current_amount_pledged != None:
+            # instance.average_pledge = instance.current_amount_pledged / len(instance.pledges)
+            # instance.save()
+            return round((instance.pledge_count / instance.view_count) * 100, 1)
+        return 0
+    
+
 
 class ActivityDetailSerializer(ActivitySerializer):
-    project = ProjectSerializer(read_only=True)
+    project = ProjectDetailSerializer(read_only=True)
 
 
 class LocationSerializer(serializers.Serializer):

@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 
 from django.utils.timezone import now
 from datetime import timedelta
+from django.db.models import Count
 
 # to calculate current amount pledged on Project serializer
 from django.db.models import Avg, Count, Min, Sum
@@ -55,6 +56,8 @@ class Project(models.Model):
         on_delete=models.PROTECT)
     # Need to keep track of this so the activity object for "last-chance" to pledge is only created once.
     last_chance_triggered = models.BooleanField(default=False, blank=True)
+    view_count = models.IntegerField(default=3, blank=True)
+    pledge_count = models.IntegerField(default=1, blank=True)
 
     @property
     def is_open(self):
@@ -210,9 +213,9 @@ class Activity(models.Model):
 #     },
     # {
     #     "id": 2,
-    #     "amount": 75,
-    #     "comment": "YES yes yes. i LOVE driving.",
-    #     "anonymous": false,
+        # "amount": 75,
+        # "comment": "YES yes yes. i LOVE driving.",
+        # "anonymous": false,
     #     "user": 2,
     #     "project_id": 1,
     #     "date_created": "2020-08-25T13:50:17.201660Z",
