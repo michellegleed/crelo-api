@@ -3,7 +3,7 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
-from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationDetailSerializer, ProgressUpdateSerializer, ActivitySerializer, ActivityDetailSerializer, ProjectAnalyticsSerializer
+from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, ProgressUpdateSerializer, ActivitySerializer, ActivityDetailSerializer, ProjectAnalyticsSerializer
 
 from django.dispatch import receiver, Signal
 

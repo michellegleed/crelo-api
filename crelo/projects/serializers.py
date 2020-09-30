@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
+from users.serializers import LimitedUserSerializer
 
 # Importing this to check whether project has passed due date and should be closed.
 from django.utils.timezone import now
@@ -10,6 +11,10 @@ from django.dispatch import receiver, Signal
 
 # to calculate current amount pledged on Project serializer
 from django.db.models import Avg, Count, Min, Sum
+
+class LocationSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    name = serializers.CharField(max_length=200)
 
 
 class ProjectCategorySerializer(serializers.Serializer):
@@ -41,12 +46,14 @@ class PledgetypeSerializer(serializers.Serializer):
 class PledgeSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     amount = serializers.IntegerField()
-    comment = serializers.CharField(max_length=200)
+    comment = serializers.CharField(max_length=800)
     anonymous = serializers.BooleanField()
     # The source argument (being passed in on the next line) controls which attribute is used to populate a field, and can point at any attribute on the serialized instance, which in this case the attribute is the id and the instance is the instance of a user.
-    user = serializers.ReadOnlyField(source='user.id')
+    # user = serializers.ReadOnlyField(source='user.id')
+    
+    user = LimitedUserSerializer(read_only=True)
     project_id = serializers.ReadOnlyField(source='project.id')
-    date_created = serializers.ReadOnlyField()
+    date = serializers.ReadOnlyField()
     # type_id = serializers.IntegerField()
     type_id = serializers.ReadOnlyField(source='project.pledgetype.id')
 
@@ -59,7 +66,7 @@ class PledgeSerializer(serializers.Serializer):
         instance.anonymous = validated_data.get('anonymous', instance.anonymous) 
         instance.user = validated_data.get('user', instance.user) 
         instance.project_id = validated_data.get('project_id', instance.project_id) 
-        instance.date_created = validated_data.get('date_created', instance.date_created) 
+        instance.date = validated_data.get('date', instance.date) 
         instance.type_id = validated_data.get('type_id', instance.type_id) 
         instance.save()
         return instance
@@ -68,16 +75,18 @@ class PledgeSerializer(serializers.Serializer):
 class ActivitySerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     action = serializers.CharField(max_length=200)
-    datetime = serializers.ReadOnlyField()
+    info = serializers.CharField(max_length=4000)
+    date = serializers.ReadOnlyField()
     user_id = serializers.ReadOnlyField(source='user.id')
-    location_id = serializers.ReadOnlyField(source='location.id')
+    # location = LocationSerializer()
+    # location_id = serializers.ReadOnlyField(source='location.id')
     project_id = serializers.ReadOnlyField(source='project.id')
     
     def create(self, validated_data):
         return Activity.objects.create(**validated_data)
 
 
-# class LocationSerializer(serializers.Serializer):
+# class LocationDetailSerializer(serializers.Serializer):
 #     id = serializers.ReadOnlyField()
 #     name = serializers.CharField(max_length=200)
 #     # slug_name = serializers.CharField(max_length=50)
@@ -97,13 +106,13 @@ class ActivitySerializer(serializers.Serializer):
 #         instance.save()
 #         return instance
 
-     
 
 class ProgressUpdateSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     project_id = serializers.ReadOnlyField(source='project.id')
-    date_posted = serializers.ReadOnlyField()
-    content = serializers.CharField(max_length=2000)
+    date = serializers.ReadOnlyField()
+    content = serializers.CharField(max_length=4000)
+    image = serializers.URLField(required=False)
     user = serializers.ReadOnlyField(source='project.user.id')
 
     def create(self, validated_data):
@@ -126,7 +135,7 @@ def activity_signal_receiver(sender, **kwargs):
 
     activity_serializer = ActivitySerializer(data=activity_data)
     if activity_serializer.is_valid():
-        print("activity serialize is valid!")
+        print("activity serializer is valid!")
         activity_serializer.save(
             user=kwargs.get('user'), 
             project=kwargs.get('project'),
@@ -138,16 +147,17 @@ class ProjectSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     title = serializers.CharField(max_length=200)
     venue = serializers.CharField(max_length=200, default="")
-    description = serializers.CharField(max_length=800)
+    description = serializers.CharField(max_length=4000)
     pledgetype = serializers.PrimaryKeyRelatedField(queryset=Pledgetype.objects.all())
     goal_amount = serializers.IntegerField()
     image = serializers.URLField()
     is_open = serializers.ReadOnlyField()
     date_created = serializers.ReadOnlyField()
-    user = serializers.ReadOnlyField(source='user.id')
+    user = serializers.ReadOnlyField(source='user.username')
     due_date = serializers.DateTimeField()
-    category = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
-    location_id = serializers.ReadOnlyField(source='user.location.id')
+    # category = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
+    category = ProjectCategorySerializer()
+    location = serializers.ReadOnlyField(source='user.location.name')
     last_milestone = serializers.IntegerField(default=0)
     last_chance_triggered = serializers.BooleanField(default=False)
     current_amount_pledged = serializers.ReadOnlyField()
@@ -175,7 +185,7 @@ class ProjectSerializer(serializers.Serializer):
 
                 location = Location.objects.get(pk=instance.location_id)
 
-                activity_signal.send(sender=Project, action=f"milestone-{instance.last_milestone}", user=instance.user, project=instance, location=location)
+                activity_signal.send(sender=Project, action="milestone", info=instance.last_milestone, user=instance.user, project=instance, location=location)
 
                 instance.save()
         
@@ -215,8 +225,10 @@ class ProjectDetailSerializer(ProjectSerializer):
 
     pledges = serializers.SerializerMethodField()
 
+    user = LimitedUserSerializer(read_only=True)
+
     def get_pledges(self, instance):
-         ordered_queryset = instance.pledges.all().order_by('-amount','-date_created')
+         ordered_queryset = instance.pledges.all().order_by('-amount','-date')
          return PledgeSerializer(ordered_queryset, many=True, context=self.context).data
 
     # increment_project_views = serializers.SerializerMethodField()
@@ -255,10 +267,10 @@ class ProjectAnalyticsSerializer(ProjectDetailSerializer):
 
 
 class ActivityDetailSerializer(ActivitySerializer):
-    project = ProjectDetailSerializer(read_only=True)
+    project = ProjectSerializer(read_only=True)
 
 
-class LocationSerializer(serializers.Serializer):
+class LocationDetailSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     name = serializers.CharField(max_length=200)
     # slug_name = serializers.CharField(max_length=50)
@@ -266,8 +278,15 @@ class LocationSerializer(serializers.Serializer):
     activity = serializers.SerializerMethodField()
 
     def get_activity(self, instance):
-         ordered_queryset = instance.location_activity.all().order_by('-datetime')
-         return ActivityDetailSerializer(ordered_queryset, many=True, context=self.context).data
+        # We are doing this because we only want to get the activity for open projects!!
+        ordered_queryset = instance.location_activity.all().order_by('-date')
+        open_project_activities = [item for item in ordered_queryset if item.project.is_open]
+        final_activity_feed = open_project_activities[:18]
+
+        return ActivityDetailSerializer(final_activity_feed, many=True, context=self.context).data
+        
+        # this returns the activity of both open and closed projects...
+        # return ActivityDetailSerializer(ordered_queryset, many=True, context=self.context).data
 
     def create(self, validated_data):
         return Location.objects.create(**validated_data)

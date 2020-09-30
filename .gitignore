@@ -6,5 +6,5 @@ __pycache__
 staticfiles
 crelo/projects/__pycache__/serializers.cpython-38.pyc
 crelo/projects/__pycache__/urls.cpython-38.pyc
-crelo/projects/__pycache__/*
-crelo/users/__pycache__/*
+crelo/projects/__pycache__/
+crelo/users/__pycache__/

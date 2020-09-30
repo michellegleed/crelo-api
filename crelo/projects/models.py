@@ -77,14 +77,14 @@ class Project(models.Model):
 
 class Pledge(models.Model):
     amount = models.IntegerField()
-    comment = models.CharField(max_length=200)
+    comment = models.CharField(max_length=400)
     anonymous = models.BooleanField()
     project = models.ForeignKey(
         'Project', 
         on_delete=models.CASCADE, 
         related_name='pledges'
     )
-    date_created = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE, 
@@ -98,8 +98,9 @@ class Pledge(models.Model):
 
 class ProgressUpdate(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='updates')
-    date_posted = models.DateTimeField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
+    image = models.URLField()
 
 # Activity possible actions: 
     # - project reaches goal amount (and 25%, 50% and 75%)
@@ -109,8 +110,8 @@ class ProgressUpdate(models.Model):
 
 class Activity(models.Model):
     action = models.CharField(max_length=200)
-    datetime = models.DateTimeField(auto_now_add=True)
-    
+    info = models.TextField(4000)
+    date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
         get_user_model(), 
         on_delete=models.CASCADE, 
@@ -126,7 +127,6 @@ class Activity(models.Model):
         on_delete=models.CASCADE, 
         related_name='project_activity'
     )
-
     
 
 # SHELL COMMANDS #
@@ -195,16 +195,16 @@ class Activity(models.Model):
 #         "due_date": "2020-03-20T14:28:23.382748Z",
 #         "category_id": 3
 #     },
-#     {
-#         "title": "Cat Fishing Group",
-#         "venue": "Curtin Rowing Club",
-#         "description": "Do you know a cat that spends too much time on the internet using fake social media accounts to stalk their exes? We are encouraging all neighborhood cats to learn real fishing. They'll get some much-needed outdoor time and learn how to catch their own food!",
-#         "goal_amount": 750,
-#         "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80",
-#         "due_date": "2020-03-20T14:28:23.382748Z",
-#         "category": 1,
-#         "pledgetype": 1
-#     }
+    # {
+    #     "title": "Cat Fishing Group",
+    #     "venue": "Curtin Rowing Club",
+    #     "description": "Do you know a cat that spends too much time on the internet using fake social media accounts to stalk their exes? We are encouraging all neighborhood cats to learn real fishing. They'll get some much-needed outdoor time and learn how to catch their own food!",
+    #     "goal_amount": 750,
+    #     "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80",
+    #     "due_date": "2020-03-20T14:28:23.382748Z",
+    #     "category": 1,
+    #     "pledgetype": 1
+    # }
 
 # {
 #         "amount": 75,
@@ -221,16 +221,16 @@ class Activity(models.Model):
     #     "date_created": "2020-08-25T13:50:17.201660Z",
     #     "type_id": 2
     # },
-#     {
-#         "id": 5,
-#         "amount": 500,
-#         "comment": "Genius!",
-#         "anonymous": true,
-#         "user": 5,
-#         "project_id": 1,
-#         "date_created": "2020-08-29T10:52:43.369387Z",
-#         "type_id": 2
-#     },
+    # {
+    #     "id": 5,
+    #     "amount": 500,
+    #     "comment": "Genius!",
+    #     "anonymous": true,
+    #     "user": 5,
+    #     "project_id": 1,
+    #     "date_created": "2020-08-29T10:52:43.369387Z",
+    #     "type_id": 2
+    # },
 
 
     # {
@@ -261,10 +261,10 @@ class Activity(models.Model):
     #     "favourite_categories": []
     # }
     #    {
-#         "id": 1,
-#         "date_posted": "2020-08-26T10:23:34.701803Z",
-#         "content": "Hey everyone! Here's an update on our project."
-        # }
+    #     "id": 1,
+    #     "date_posted": "2020-08-26T10:23:34.701803Z",
+    #     "content": "Hey everyone! Here's an update on our project."
+    #     }
 
     #         {
     #     "id": 1,
@@ -283,6 +283,11 @@ class Activity(models.Model):
     #     "name": "Kids"
     # }
 
+
+# {
+#   "content": "Hey everyone! Here's an update on our project. We've been in talks with Uber - they're interested in getting household pets into the gig economy and have offered to supply the dentasticks for afternoon tea.",
+# "image": "https://images.unsplash.com/photo-1593297858385-1fa0a686f544?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=934&q=80"
+# }
 
 # {
 #     "title": "Doggy Driving Lessons",
