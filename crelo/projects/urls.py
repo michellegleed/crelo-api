@@ -6,8 +6,6 @@ urlpatterns = [
     
     # path('projects/favourites/', views.ProjectListFiltered.as_view()),
     
-    
-
     # Location views
     path('locations/', views.LocationList.as_view()),
     path('locations/<int:pk>/', views.LocationDetail.as_view()),

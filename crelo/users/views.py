@@ -3,6 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 
+from django.contrib.auth import get_user_model
+
 from .models import CustomUser
 from .serializers import CustomUserSerializer
 
@@ -135,9 +137,18 @@ class UserProjectsList(APIView):
 
     permission_classes = [IsLoggedInUser]
 
+    def get_object(self):
+        try:
+            return CustomUser.objects.get(pk=self.request.user.id)
+        except CustomUser.DoesNotExist:
+            raise Http404
+
     def get(self, request):
-        projects = Project.objects.filter(user=get_user_model())
+        user = self.get_object()
+        projects = Project.objects.filter(user=user.id)
         serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data)
+
 
 
 class UserAddCategory(APIView):
