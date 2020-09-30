@@ -130,6 +130,16 @@ class AuthenticatedUserProfile(APIView):
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class UserProjectsList(APIView):
+
+    permission_classes = [IsLoggedInUser]
+
+    def get(self, request):
+        projects = Project.objects.filter(user=get_user_model())
+        serializer = ProjectSerializer(projects, many=True)
+
+
 class UserAddCategory(APIView):
 
     permission_classes = [IsLoggedInUser]

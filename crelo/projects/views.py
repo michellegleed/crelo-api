@@ -3,7 +3,7 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
-from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationSerializer, ProgressUpdateSerializer, ActivitySerializer, ActivityDetailSerializer, ProjectAnalyticsSerializer
+from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, LocationDetailSerializer, ProgressUpdateSerializer, ActivitySerializer, ActivityDetailSerializer, ProjectAnalyticsSerializer
 
 from django.dispatch import receiver, Signal
 
@@ -23,7 +23,8 @@ def activity_signal_receiver(sender, **kwargs):
         activity_serializer.save(
             user=kwargs.get('user'), 
             project=kwargs.get('project'),
-            location=kwargs.get('location')
+            location=kwargs.get('location'),
+            info=kwargs.get('info')
         )
 
 
@@ -41,12 +42,11 @@ class ProjectList(APIView):
         serializer = ProjectSerializer(data=request.data)
         
         if serializer.is_valid():
-            print("about to save the new project serializer")
             serializer.save(user=request.user, location_id=request.user.location.id)
 
             project = Project.objects.get(pk=serializer.data['id'])
 
-            activity_signal.send(sender=ProgressUpdate, action="project-created", user=request.user, project=project, location=request.user.location)
+            activity_signal.send(sender=ProgressUpdate, action="project-created", info="", user=request.user, project=project, location=request.user.location)
 
             return Response(
                 serializer.data,
@@ -56,7 +56,6 @@ class ProjectList(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-
 
 
 class ProjectDetail(APIView):
@@ -94,6 +93,12 @@ class ProjectDetail(APIView):
             return Response(serializer.data) # status=200 so no need to include - it's the default.
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self, request, pk):
+        project = self.get_object(pk)
+        project.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 
 class ProgressUpdateList(APIView):
 
@@ -114,7 +119,7 @@ class ProgressUpdateList(APIView):
         if serializer.is_valid():
             serializer.save(project_id=project.id)
 
-            activity_signal.send(sender=ProgressUpdate, action="progress-update", user=request.user, project=project, location=location)
+            activity_signal.send(sender=ProgressUpdate, action="progress-update", info=request.data.content, user=request.user, project=project, location=location)
 
             return Response(
                 serializer.data,
@@ -316,12 +321,12 @@ class LocationList(APIView):
 
     def get(self, request):
         location = Location.objects.all()
-        serializer = LocationSerializer(location, many=True)
+        serializer = LocationDetailSerializer(location, many=True)
         return Response(serializer.data)
 
     #ADMIN ONLY!!! Might need to use a mixin??
     def post(self, request):
-        serializer = LocationSerializer(data=request.data)
+        serializer = LocationDetailSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -346,14 +351,14 @@ class LocationDetail(APIView):
 
     def get(self, request, pk):
         location = self.get_object(pk)
-        serializer = LocationSerializer(location)
+        serializer = LocationDetailSerializer(location)
         return Response(serializer.data)
     
     #ADMIN ONLY!!! Might need to use a mixin??
     def put(self, request, pk):
         location = self.get_object(pk)
         # Have to pass in as third agrument partial=True, otherwise the serializer will require a value to be submitted for EVERY property EVERY time.
-        serializer = LocationSerializer(location, data=request.data, partial=True)
+        serializer = LocationDetailSerializer(location, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data) # status=200 so no need to include - it's the default.
@@ -368,7 +373,7 @@ class LocationDetail(APIView):
 
 #     def get(self, request, location):
 #         location = Location.objects.get(slug_name=location)
-#         serializer = LocationSerializer(location)
+#         serializer = LocationDetailSerializer(location)
 #         return Response(serializer.data)
 
 
@@ -402,7 +407,7 @@ class ProjectListFiltered(APIView):
         if request.user.is_authenticated:
             user_categories = ProjectCategory.objects.filter(customuser__id=self.request.user.id)
 
-            projects = Project.objects.filter(location=loc_pk)
+            projects = Project.objects.filter(location=loc_pk).order_by('-date')
 
             # adding the query sets together using the "|" 
             for cat_id in user_categories:
@@ -419,7 +424,7 @@ class ProjectListFiltered(APIView):
 
 #     def get(self, request, location):
 #         location = Location.objects.get(slug_name=location)
-#         serializer = LocationSerializer(location)
+#         serializer = LocationDetailSerializer(location)
 #         return Response(serializer.data)
 
 
@@ -437,12 +442,13 @@ class LocationActivity(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     
     def get(self, request, pk):
-        activity_feed = Activity.objects.filter(location=pk).order_by('-datetime')[:10]
+        activity_feed = Activity.objects.filter(location=pk).order_by('-date')
 
-        serializer = ActivityDetailSerializer(activity_feed, many=True)
+        open_project_activities = [item for item in activity_feed if item.project.is_open]
+        final_activity_feed = open_project_activities[:18]
+
+        serializer = ActivityDetailSerializer(final_activity_feed, many=True)
 
         return Response(serializer.data)
 
     
-
-

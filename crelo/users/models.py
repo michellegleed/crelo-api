@@ -9,8 +9,8 @@ class CustomUser(AbstractUser):
         on_delete=models.CASCADE, 
         related_name='user_location'
     )
-    bio = models.TextField(blank=True, default="")
-    image = models.URLField(blank=True, default="")
+    bio = models.TextField(blank=True)
+    image = models.URLField(blank=True)
     is_admin = models.BooleanField(blank=True, default=False)
     favourite_categories = models.ManyToManyField(ProjectCategory, related_name='customuser', blank=True)
 
