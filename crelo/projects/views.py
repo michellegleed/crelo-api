@@ -407,13 +407,16 @@ class ProjectListFiltered(APIView):
         if request.user.is_authenticated:
             user_categories = ProjectCategory.objects.filter(customuser__id=self.request.user.id)
 
-            projects = Project.objects.filter(location=loc_pk).order_by('-date')
+            # projects = Project.objects.filter(location=loc_pk).order_by('-date_created')
+
+            favourite_projects = Project.objects.none()
 
             # adding the query sets together using the "|" 
             for cat_id in user_categories:
-                projects = projects |Project.objects.filter(category=cat_id)
+                favourite_projects = favourite_projects | Project.objects.filter(location=loc_pk, category=cat_id)
 
-            open_projects = [item for item in projects if item.is_open]
+            favourite_projects.order_by('-date_created')
+            open_projects = [item for item in favourite_projects if item.is_open]
             serializer = ProjectSerializer(open_projects, many=True)
 
             return Response(serializer.data)
