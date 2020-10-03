@@ -14,6 +14,8 @@ from projects.serializers import PledgeSerializer, ProjectSerializer, ProjectCat
 # Not using IsAdmin in this file. Remove it from the import unless that changes on Wednesday...
 from .permissions import IsLoggedInUserOrReadOnly, IsLoggedInUser, IsAdminOrReadOnly
 
+from django.db import IntegrityError
+from rest_framework.exceptions import ParseError
 
 class CustomUserList(APIView):
 
@@ -27,8 +29,11 @@ class CustomUserList(APIView):
     def post(self, request):
         serializer = CustomUserSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+            try:
+                serializer.save()
+                return Response(serializer.data)
+            except IntegrityError:
+                return ParseError(detail="This username already exists!")
         return Response(serializer.errors)
 
 

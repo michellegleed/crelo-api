@@ -3,7 +3,7 @@ from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Project, Pledge, Pledgetype, ProjectCategory, Location, ProgressUpdate, Activity
-from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, ProgressUpdateSerializer, ActivitySerializer, ActivityDetailSerializer, ProjectAnalyticsSerializer, LocationDetailSerializer
+from .serializers import ProjectSerializer, ProjectDetailSerializer, PledgeSerializer, PledgetypeSerializer, ProjectCategorySerializer, ProgressUpdateSerializer, ActivitySerializer, ActivityDetailSerializer, ProjectAnalyticsSerializer, LocationDetailSerializer, LocationSerializer
 
 from django.dispatch import receiver, Signal
 
@@ -321,7 +321,7 @@ class LocationList(APIView):
 
     def get(self, request):
         location = Location.objects.all()
-        serializer = LocationDetailSerializer(location, many=True)
+        serializer = LocationSerializer(location, many=True)
         return Response(serializer.data)
 
     #ADMIN ONLY!!! Might need to use a mixin??

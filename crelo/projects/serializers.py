@@ -79,7 +79,7 @@ class ActivitySerializer(serializers.Serializer):
     date = serializers.ReadOnlyField()
     user_id = serializers.ReadOnlyField(source='user.id')
     # location = LocationSerializer()
-    # location_id = serializers.ReadOnlyField(source='location.id')
+    location_id = serializers.ReadOnlyField(source='location.id')
     project_id = serializers.ReadOnlyField(source='project.id')
     
     def create(self, validated_data):
