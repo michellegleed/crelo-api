@@ -33,7 +33,7 @@ class CustomUserList(APIView):
                 serializer.save()
                 return Response(serializer.data)
             except IntegrityError:
-                return ParseError(detail="This username already exists!")
+                raise ParseError(detail="This username already exists!")
         return Response(serializer.errors)
 
 
