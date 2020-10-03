@@ -9,7 +9,7 @@ from .models import CustomUser
 from .serializers import CustomUserSerializer
 
 from projects.models import Pledge, Project, ProjectCategory
-from projects.serializers import PledgeSerializer, ProjectSerializer, ProjectCategorySerializer
+from projects.serializers import PledgeSerializer, ProjectSerializer, ProjectCategorySerializer, LocationSerializer
 
 # Not using IsAdmin in this file. Remove it from the import unless that changes on Wednesday...
 from .permissions import IsLoggedInUserOrReadOnly, IsLoggedInUser, IsAdminOrReadOnly
@@ -95,14 +95,21 @@ class AuthenticatedUserProfile(APIView):
         user = self.get_object()
         # if you don't call check_object_permissions here, the view won't check if the user has the right permissions!
         self.check_object_permissions(request, user)
-
+        
         user_serializer = CustomUserSerializer(user)
+
         pledges = Pledge.objects.filter(user_id=user.id)
         pledge_serializer = PledgeSerializer(pledges, many=True)
+
         projects = Project.objects.filter(user_id=user.id)
         project_serializer = ProjectSerializer(projects, many=True)
+
+        location = user.location
+        location_serializer = LocationSerializer(location)
+
         response_data = { 
-            "user": user_serializer.data, 
+            "user": user_serializer.data,
+            "location": location_serializer.data, 
             "projects": project_serializer.data, 
             "pledges": pledge_serializer.data 
         }

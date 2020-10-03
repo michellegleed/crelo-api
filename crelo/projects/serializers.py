@@ -195,6 +195,7 @@ class ProjectSerializer(serializers.Serializer):
         print("the validated data looks like this: ", validated_data)
         return Project.objects.create(**validated_data)
 
+
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
         instance.venue = validated_data.get('venue', instance.venue)
