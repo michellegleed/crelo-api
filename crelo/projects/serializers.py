@@ -77,6 +77,7 @@ class ActivitySerializer(serializers.Serializer):
     action = serializers.CharField(max_length=200)
     info = serializers.CharField(max_length=4000)
     date = serializers.ReadOnlyField()
+    image = serializers.URLField(required=False)
     user_id = serializers.ReadOnlyField(source='user.id')
     # location = LocationSerializer()
     location_id = serializers.ReadOnlyField(source='location.id')
@@ -109,7 +110,7 @@ class ActivitySerializer(serializers.Serializer):
 
 class ProgressUpdateSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
-    project_id = serializers.ReadOnlyField(source='project.id')
+    project = serializers.ReadOnlyField(source='project.id')
     date = serializers.ReadOnlyField()
     content = serializers.CharField(max_length=4000)
     image = serializers.URLField(required=False)
@@ -131,7 +132,10 @@ activity_signal = Signal(providing_args=['action'])
 def activity_signal_receiver(sender, **kwargs):
     print("activity signal was triggered. kwargs = ", kwargs)
 
-    activity_data = {"action": kwargs.get('action')}
+    activity_data = {
+        "action": kwargs.get('action'),
+        "info": kwargs.get('info')
+        }
 
     activity_serializer = ActivitySerializer(data=activity_data)
     if activity_serializer.is_valid():

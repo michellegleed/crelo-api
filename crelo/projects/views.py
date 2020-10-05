@@ -18,7 +18,8 @@ def activity_signal_receiver(sender, **kwargs):
 
     activity_data = {
         "action": kwargs.get('action'),
-        "info": kwargs.get('info')
+        "info": kwargs.get('info'),
+        "image": kwargs.get('image')
         }
 
     activity_serializer = ActivitySerializer(data=activity_data)
@@ -121,10 +122,11 @@ class ProgressUpdateList(APIView):
             project = Project.objects.get(pk=project_pk)
             location = Location.objects.get(pk=project.location_id)
             content = serializer.validated_data.get('content')
-            
-            serializer.save(project_id=project.id)
+            image = serializer.validated_data.get('image', None)
 
-            activity_signal.send(sender=ProgressUpdate, action="progress-update", info=content, user=request.user, project=project, location=location)
+            serializer.save(project=project)
+
+            activity_signal.send(sender=ProgressUpdate, action="progress-update", info=content, user=request.user, project=project, location=location, image=image)
 
             return Response(
                 serializer.data,

@@ -112,6 +112,7 @@ class Activity(models.Model):
     action = models.CharField(max_length=200)
     info = models.TextField(4000)
     date = models.DateTimeField(auto_now_add=True)
+    image = models.URLField()
     user = models.ForeignKey(
         get_user_model(), 
         on_delete=models.CASCADE, 
