@@ -36,13 +36,13 @@ class CustomUserList(APIView):
 
             try:
                 nonUniqueUser = CustomUser.objects.get(email=email)
-                raise ParseError(non_field_errors="This email is already signed up!")
+                raise ParseError(detail="This email is already signed up!")
             except CustomUser.DoesNotExist:
                 try:
                     serializer.save()
                     return Response(serializer.data)
                 except IntegrityError:
-                    raise ParseError(non_field_errors="This username already exists!")
+                    raise ParseError(detail="This username already exists!")
         
         return Response(serializer.errors)
 
