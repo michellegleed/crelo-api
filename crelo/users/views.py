@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 
 from django.contrib.auth import get_user_model
+# from django.contrib.auth.models import AbstractUser
 
 from .models import CustomUser
 from .serializers import CustomUserSerializer
@@ -29,11 +30,20 @@ class CustomUserList(APIView):
     def post(self, request):
         serializer = CustomUserSerializer(data=request.data)
         if serializer.is_valid():
+
+            print(serializer.validated_data)
+            email = serializer.validated_data.get('email')
+
             try:
-                serializer.save()
-                return Response(serializer.data)
-            except IntegrityError:
-                raise ParseError(detail="This username already exists!")
+                nonUniqueUser = CustomUser.objects.get(email=email)
+                raise ParseError(detail="This email is already signed up!")
+            except CustomUser.DoesNotExist:
+                try:
+                    serializer.save()
+                    return Response(serializer.data)
+                except IntegrityError:
+                    raise ParseError(detail="This username already exists!")
+        
         return Response(serializer.errors)
 
 
