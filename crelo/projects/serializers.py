@@ -146,6 +146,32 @@ def activity_signal_receiver(sender, **kwargs):
             location=kwargs.get('location')
         )
 
+class LimitedProjectSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    title = serializers.CharField(max_length=200)
+    venue = serializers.CharField(max_length=200, default="")
+    description = serializers.CharField(max_length=4000)
+    pledgetype = serializers.PrimaryKeyRelatedField(queryset=Pledgetype.objects.all())
+    goal_amount = serializers.IntegerField()
+    image = serializers.URLField()
+    is_open = serializers.ReadOnlyField()
+    date_created = serializers.ReadOnlyField()
+    user = serializers.ReadOnlyField(source='user.username')
+    due_date = serializers.DateTimeField()
+    category = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
+    location = serializers.ReadOnlyField(source='user.location.name')
+    last_milestone = serializers.IntegerField(default=0)
+    last_chance_triggered = serializers.BooleanField(default=False)
+    current_amount_pledged = serializers.ReadOnlyField()
+    current_percentage_pledged = serializers.ReadOnlyField()
+
+    def get_check_is_open(self, instance):
+            if instance.is_open:
+                instance.is_open = instance.due_date > now()
+                instance.save()
+                return instance
+
+
 #this serializer shows just the project data
 class ProjectSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
@@ -184,14 +210,16 @@ class ProjectSerializer(serializers.Serializer):
 
     def get_check_for_milestone(self, instance):
         if instance.is_open:
-            while instance.current_percentage_pledged > float(instance.last_milestone + 25):
+            if instance.current_percentage_pledged > float(instance.last_milestone + 25):
                 instance.last_milestone += 25
 
                 location = Location.objects.get(pk=instance.location_id)
 
+                instance.save()
+
                 activity_signal.send(sender=Project, action="milestone", info=instance.last_milestone, user=instance.user, project=instance, location=location)
 
-                instance.save()
+                
         
     # this func is required to store the data sent in the POST request to the database..
     def create(self, validated_data):
@@ -272,7 +300,7 @@ class ProjectAnalyticsSerializer(ProjectDetailSerializer):
 
 
 class ActivityDetailSerializer(ActivitySerializer):
-    project = ProjectSerializer(read_only=True)
+    project = LimitedProjectSerializer(read_only=True)
 
 
 class LocationDetailSerializer(serializers.Serializer):
