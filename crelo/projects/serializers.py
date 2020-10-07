@@ -134,7 +134,8 @@ def activity_signal_receiver(sender, **kwargs):
 
     activity_data = {
         "action": kwargs.get('action'),
-        "info": kwargs.get('info')
+        "info": kwargs.get('info'),
+        "image": kwargs.get('image')
         }
 
     activity_serializer = ActivitySerializer(data=activity_data)
@@ -203,7 +204,7 @@ class ProjectSerializer(serializers.Serializer):
                 if instance.due_date - timedelta(days=5) < now():
                     location = Location.objects.get(pk=instance.location_id)
 
-                    activity_signal.send(sender=Project, action="last-chance", user=instance.user, project=instance, location=location)
+                    activity_signal.send(sender=Project, action="last-chance", user=instance.user, project=instance, location=location, image=instance.image)
 
                     instance.last_chance_triggered = True
 
@@ -211,14 +212,18 @@ class ProjectSerializer(serializers.Serializer):
 
     def get_check_for_milestone(self, instance):
         if instance.is_open:
-            if instance.current_percentage_pledged > float(instance.last_milestone + 25):
-                instance.last_milestone += 25
+            if instance.last_milestone < 100:
+                if instance.current_percentage_pledged > float(instance.last_milestone + 25):
+                    instance.last_milestone += 25
 
-                location = Location.objects.get(pk=instance.location_id)
+                    location = Location.objects.get(pk=instance.location_id)
+                    last_milestone = instance.last_milestone
+                    user = instance.user
+                    project = instance
 
-                instance.save()
+                    instance.save()
 
-                activity_signal.send(sender=Project, action="milestone", info=instance.last_milestone, user=instance.user, project=instance, location=location)
+                    activity_signal.send(sender=Project, action="milestone", info=last_milestone, user=user, project=project, location=location, image=project.image)
 
                 
         

@@ -11,10 +11,14 @@ from .permissions import IsOwnerOrReadOnly, IsProjectOwnerOrReadOnly, IsAdminOrR
 
 # SIGNAL FUNCTIONS...
 
-activity_signal = Signal(providing_args=['action'])
+activity_signal = Signal(providing_args=['action','info','image',])
+
+# activity_signal = Signal()
 
 @receiver(activity_signal)
 def activity_signal_receiver(sender, **kwargs):
+
+    print("activity signal received")
 
     activity_data = {
         "action": kwargs.get('action'),
@@ -23,13 +27,17 @@ def activity_signal_receiver(sender, **kwargs):
         }
 
     activity_serializer = ActivitySerializer(data=activity_data)
+
+    print(activity_serializer.initial_data)
+    print(activity_serializer.is_valid())
+
     if activity_serializer.is_valid():
+        print("activity is valid! Saving.")
         activity_serializer.save(
             user=kwargs.get('user'), 
             project=kwargs.get('project'),
             location=kwargs.get('location'),
         )
-
 
 class ProjectList(APIView):
 
@@ -49,7 +57,9 @@ class ProjectList(APIView):
 
             project = Project.objects.get(pk=serializer.data['id'])
 
-            activity_signal.send(sender=ProgressUpdate, action="project-created", info="", user=request.user, project=project, location=request.user.location)
+            activity_signal.send(sender=Project, action="project-created", info="new-project", user=request.user, project=project, location=request.user.location, image=project.image)
+
+            print("activity signal sent")
 
             return Response(
                 serializer.data,
@@ -80,7 +90,7 @@ class ProjectDetail(APIView):
             return Response(serializer.data)
 
         else:
-            print("another user is viewing your project!")
+            # print("another user is viewing your project!")
             project.view_count = project.view_count + 1
             project.save() 
 
