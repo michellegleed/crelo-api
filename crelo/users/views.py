@@ -10,7 +10,7 @@ from .models import CustomUser
 from .serializers import CustomUserSerializer
 
 from projects.models import Pledge, Project, ProjectCategory
-from projects.serializers import PledgeSerializer, ProjectSerializer, ProjectCategorySerializer, LocationSerializer
+from projects.serializers import PledgeSerializer, ProjectSerializer, ProjectCategorySerializer, LocationSerializer, ExtendedPledgeSerializer
 
 # Not using IsAdmin in this file. Remove it from the import unless that changes on Wednesday...
 from .permissions import IsLoggedInUserOrReadOnly, IsLoggedInUser, IsAdminOrReadOnly
@@ -108,8 +108,8 @@ class AuthenticatedUserProfile(APIView):
         
         user_serializer = CustomUserSerializer(user)
 
-        pledges = Pledge.objects.filter(user_id=user.id)
-        pledge_serializer = PledgeSerializer(pledges, many=True)
+        pledges = Pledge.objects.filter(user_id=user.id).order_by('-date')
+        pledge_serializer = ExtendedPledgeSerializer(pledges, many=True)
 
         projects = Project.objects.filter(user_id=user.id)
         project_serializer = ProjectSerializer(projects, many=True)

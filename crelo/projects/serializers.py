@@ -335,3 +335,17 @@ class LocationDetailSerializer(serializers.Serializer):
         # instance.slug_name = validated_data.get('slug_name', instance.slug_name)
         instance.save()
         return instance
+
+class ExtendedPledgeSerializer(PledgeSerializer):
+    id = serializers.ReadOnlyField()
+    amount = serializers.IntegerField()
+    comment = serializers.CharField(max_length=800)
+    anonymous = serializers.BooleanField()
+    # The source argument (being passed in on the next line) controls which attribute is used to populate a field, and can point at any attribute on the serialized instance, which in this case the attribute is the id and the instance is the instance of a user.
+    # user = serializers.ReadOnlyField(source='user.id')
+    
+    user = LimitedUserSerializer(read_only=True)
+    # project_id = serializers.ReadOnlyField(source='project.id')
+    project = ProjectSerializer(read_only=True)
+    date = serializers.ReadOnlyField()
+    type_id = serializers.ReadOnlyField(source='project.pledgetype.id')
