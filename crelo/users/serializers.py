@@ -28,6 +28,16 @@ class CustomUserSerializer(serializers.Serializer):
 
         return new_user
 
+    
+
+class UserSerializerForProfileUpdates(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    location_id = serializers.IntegerField()
+    bio = serializers.CharField(max_length=2000, required=False)
+    image = serializers.URLField(required=False)
+    favourite_categories = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all(), many=True, required=False)
+    username = serializers.CharField(max_length=200)
+
     def update(self, instance, validated_data):
 
         print("validated data: ", validated_data)
@@ -46,6 +56,7 @@ class CustomUserSerializer(serializers.Serializer):
         instance.save()
 
         return instance
+
       
 # For the "created by" section on the project detail pages and the "pledged by" section of the pledge cards...
 class LimitedUserSerializer(serializers.Serializer):

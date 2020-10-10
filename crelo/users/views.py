@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 # from django.contrib.auth.models import AbstractUser
 
 from .models import CustomUser
-from .serializers import CustomUserSerializer
+from .serializers import CustomUserSerializer, UserSerializerForProfileUpdates
 
 from projects.models import Pledge, Project, ProjectCategory
 from projects.serializers import PledgeSerializer, ProjectSerializer, ProjectCategorySerializer, LocationSerializer, ExtendedPledgeSerializer
@@ -131,7 +131,7 @@ class AuthenticatedUserProfile(APIView):
         # if you don't call check_object_permissions here, the view won't check if the user has the right permissions!
         self.check_object_permissions(request, user)
 
-        user_serializer = CustomUserSerializer(user, data=request.data, partial=True)
+        user_serializer = UserSerializerForProfileUpdates(user, data=request.data, partial=True)
         if user_serializer.is_valid():
             user_serializer.save()
             pledges = Pledge.objects.filter(user_id=user.id)

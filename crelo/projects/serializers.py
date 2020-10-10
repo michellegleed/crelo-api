@@ -244,7 +244,7 @@ class ProjectSerializer(serializers.Serializer):
         # instance.is_open = validated_data.get('is_open', instance.is_open)
         # instance.date_created = validated_data.get('date_created', instance.date_created)
         instance.due_date = validated_data.get('due_date', instance.due_date)
-        instance.category_id = validated_data.get('category_id', instance.category_id)
+        instance.category = validated_data.get('category', instance.category)
         # instance.location_id = validated_data.get('location_id', instance.location_id)
         instance.save()
         return instance
