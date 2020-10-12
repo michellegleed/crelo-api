@@ -134,13 +134,21 @@ class AuthenticatedUserProfile(APIView):
 
         user_serializer = UserSerializerForProfileUpdates(user, data=request.data, partial=True)
         if user_serializer.is_valid():
+
             user_serializer.save()
+
+            location = user.location
+            location_serializer = LocationSerializer(location)
+
             pledges = Pledge.objects.filter(user_id=user.id)
             pledge_serializer = PledgeSerializer(pledges, many=True)
+
             projects = Project.objects.filter(user_id=user.id)
             project_serializer = ProjectSerializer(projects, many=True)
+
             response_data = { 
                 "user": user_serializer.data,
+                "location": location_serializer.data,
                 "projects": project_serializer.data, 
                 "pledges": pledge_serializer.data 
             }
