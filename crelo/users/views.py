@@ -106,7 +106,8 @@ class AuthenticatedUserProfile(APIView):
         # if you don't call check_object_permissions here, the view won't check if the user has the right permissions!
         self.check_object_permissions(request, user)
         
-        user_serializer = CustomUserSerializer(user)
+        # user_serializer = CustomUserSerializer(user)
+        user_serializer = UserSerializerForProfileUpdates(user)
 
         pledges = Pledge.objects.filter(user_id=user.id).order_by('-date')
         pledge_serializer = ExtendedPledgeSerializer(pledges, many=True)

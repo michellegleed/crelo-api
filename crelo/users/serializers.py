@@ -32,7 +32,7 @@ class CustomUserSerializer(serializers.Serializer):
 
 class UserSerializerForProfileUpdates(serializers.Serializer):
     id = serializers.ReadOnlyField()
-    location_id = serializers.IntegerField()
+    location = serializers.IntegerField()
     bio = serializers.CharField(max_length=2000, required=False)
     image = serializers.URLField(required=False)
     favourite_categories = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all(), many=True, required=False)
@@ -64,6 +64,7 @@ class LimitedUserSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     username = serializers.CharField(max_length=200)
     image = serializers.URLField(required=False)
+    bio = serializers.CharField(max_length=2000, required=False)
 
 
       

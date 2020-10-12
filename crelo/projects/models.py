@@ -196,16 +196,16 @@ class Activity(models.Model):
 #         "due_date": "2020-03-20T14:28:23.382748Z",
 #         "category_id": 3
 #     },
-    # {
-    #     "title": "Cat Fishing Group",
-    #     "venue": "Curtin Rowing Club",
-    #     "description": "Do you know a cat that spends too much time on the internet using fake social media accounts to stalk their exes? We are encouraging all neighborhood cats to learn real fishing. They'll get some much-needed outdoor time and learn how to catch their own food!",
-    #     "goal_amount": 750,
-    #     "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80",
-    #     "due_date": "2020-03-20T14:28:23.382748Z",
-    #     "category": 1,
-    #     "pledgetype": 1
-    # }
+    {
+        "title": "Cat Fishing Group",
+        "venue": "Curtin Rowing Club",
+        "description": "Do you know a cat that spends too much time on the internet using fake social media accounts to stalk their exes? We are encouraging all neighborhood cats to learn real fishing. They'll get some much-needed outdoor time and learn how to catch their own food!",
+        "goal_amount": 750,
+        "image": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80",
+        "due_date": "2020-03-20T14:28:23.382748Z",
+        "category": 1,
+        "pledgetype": 1
+    }
 
 # {
 #         "amount": 75,
@@ -301,3 +301,6 @@ class Activity(models.Model):
 # "pledgetype": 1,
 # "last_chance_triggered": false
 # }
+
+
+# This is a *secret project* to organise an after-hours visit to the zoo. All dogs in the area are welcome. We are raising money to buy liver treats (enough for us and the zoo creatures) and bolt-cutters.

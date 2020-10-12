@@ -90,7 +90,6 @@ class ProjectDetail(APIView):
             return Response(serializer.data)
 
         else:
-            # print("another user is viewing your project!")
             project.view_count = project.view_count + 1
             project.save() 
 
