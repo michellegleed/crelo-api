@@ -56,8 +56,8 @@ class Project(models.Model):
         on_delete=models.PROTECT)
     # Need to keep track of this so the activity object for "last-chance" to pledge is only created once.
     last_chance_triggered = models.BooleanField(default=False, blank=True)
-    view_count = models.IntegerField(default=3, blank=True)
-    pledge_count = models.IntegerField(default=1, blank=True)
+    view_count = models.IntegerField(default=0, blank=True)
+    pledge_count = models.IntegerField(default=0, blank=True)
 
     @property
     def is_open(self):
