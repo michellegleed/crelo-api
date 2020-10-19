@@ -58,7 +58,20 @@ class CustomUserDetail(APIView):
     # get profile of a given user
     def get(self, request, pk):
         user = self.get_object(pk)
-        serializer = CustomUserSerializer(user)
+        user_serializer = CustomUserSerializer(user)
+
+        location = user.location
+        location_serializer = LocationSerializer(location)
+
+        projects = Project.objects.filter(user_id=user.id)
+        project_serializer = ProjectSerializer(projects, many=True)
+
+        response_data = { 
+            "user": user_serializer.data,
+            "location": location_serializer.data, 
+            "projects": project_serializer.data
+        }
+
         # pledges = Pledge.objects.filter(user_id=user.id)
         # pledge_serializer = PledgeSerializer(pledges, many=True)
         # response_data = { 
@@ -66,7 +79,7 @@ class CustomUserDetail(APIView):
         #     "pledges": pledge_serializer.data 
         # }
         # return Response(response_data)
-        return Response(serializer.data)
+        return Response(response_data)
 
     # def put(self, request, pk):
     #     user = self.get_object(pk)
