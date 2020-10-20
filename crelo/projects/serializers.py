@@ -189,7 +189,7 @@ class ProjectSerializer(serializers.Serializer):
     due_date = serializers.DateTimeField()
     category = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
     # category = ProjectCategorySerializer()
-    location = serializers.ReadOnlyField(source='user.location.name')
+    location = serializers.ReadOnlyField(source='user.location.id')
     last_milestone = serializers.IntegerField(default=0)
     last_chance_triggered = serializers.BooleanField(default=False)
     current_amount_pledged = serializers.ReadOnlyField()
@@ -204,7 +204,7 @@ class ProjectSerializer(serializers.Serializer):
                 if instance.due_date - timedelta(days=5) < now():
                     location = Location.objects.get(pk=instance.location_id)
 
-                    activity_signal.send(sender=Project, action="last-chance", user=instance.user, project=instance, location=location, image=instance.image)
+                    activity_signal.send(sender=Project, action="last-chance", info=instance.description, user=instance.user, project=instance, location=location, image=instance.image)
 
                     instance.last_chance_triggered = True
 
