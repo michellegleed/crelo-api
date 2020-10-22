@@ -189,7 +189,7 @@ class ProjectSerializer(serializers.Serializer):
     due_date = serializers.DateTimeField()
     category = serializers.PrimaryKeyRelatedField(queryset=ProjectCategory.objects.all())
     # category = ProjectCategorySerializer()
-    location = serializers.ReadOnlyField(source='user.location.id')
+    location = serializers.ReadOnlyField(source='user.location.name')
     last_milestone = serializers.IntegerField(default=0)
     last_chance_triggered = serializers.BooleanField(default=False)
     current_amount_pledged = serializers.ReadOnlyField()
