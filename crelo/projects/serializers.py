@@ -224,6 +224,13 @@ class ProjectSerializer(serializers.Serializer):
                     instance.save()
 
                     activity_signal.send(sender=Project, action="milestone", info=last_milestone, user=user, project=project, location=location, image=project.image)
+                while instance.current_percentage_pledged < float(instance.last_milestone):
+                    milestoneActivityToDelete = Activity.objects.get(action="milestone", info=instance.last_milestone, project__id=instance.id)
+
+                    milestoneActivityToDelete.delete()
+                    instance.last_milestone -= 25
+                    instance.save()
+
 
                 
         
