@@ -209,6 +209,13 @@ class ProjectSerializer(serializers.Serializer):
                     instance.last_chance_triggered = True
 
                     instance.save()
+            else:
+                if instance.due_date - timedelta(days=5) > now():
+                    lastChanceActivityToDelete = Activity.objects.get(action="last-chance", project__id=instance.id)
+
+                    lastChanceActivityToDelete.delete()
+                    instance.last_chance_triggered = False
+                    instance.save()
 
     def get_check_for_milestone(self, instance):
         if instance.is_open:
@@ -237,7 +244,6 @@ class ProjectSerializer(serializers.Serializer):
     # this func is required to store the data sent in the POST request to the database..
     def create(self, validated_data):
         # the "**"" unpacks the validated_Data
-        print("the validated data looks like this: ", validated_data)
         return Project.objects.create(**validated_data)
 
 
