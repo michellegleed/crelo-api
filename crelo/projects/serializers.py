@@ -221,7 +221,9 @@ class ProjectSerializer(serializers.Serializer):
         if instance.is_open:
             if instance.last_milestone < 100:
                 if instance.current_percentage_pledged > float(instance.last_milestone + 25):
-                    instance.last_milestone += 25
+
+                    while instance.current_percentage_pledged > float(instance.last_milestone + 25):
+                        instance.last_milestone += 25
 
                     location = Location.objects.get(pk=instance.location_id)
                     last_milestone = instance.last_milestone
@@ -231,6 +233,7 @@ class ProjectSerializer(serializers.Serializer):
                     instance.save()
 
                     activity_signal.send(sender=Project, action="milestone", info=last_milestone, user=user, project=project, location=location, image=project.image)
+                    
                 while instance.current_percentage_pledged < float(instance.last_milestone):
                     milestoneActivityToDelete = Activity.objects.get(action="milestone", info=instance.last_milestone, project__id=instance.id)
 
