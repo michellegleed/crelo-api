@@ -137,7 +137,8 @@ class AuthenticatedUserProfile(APIView):
             "projects": project_serializer.data, 
             "pledges": pledge_serializer.data 
         }
-        return Response(response_data)
+        # return Response(response_data)
+        return Response(user_serializer.data)
 
     def put(self, request):
         user = self.get_object()
