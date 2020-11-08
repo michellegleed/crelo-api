@@ -276,7 +276,7 @@ class ProjectSerializer(serializers.Serializer):
 class ProjectDetailSerializer(ProjectSerializer):
     updates = ProgressUpdateSerializer(many=True, read_only=True)
     # pledges = PledgeSerializer(many=True, read_only=True)
-    project_activity = ActivitySerializer(many=True, read_only=True)
+    # project_activity = ActivitySerializer(many=True, read_only=True)
 
     pledges = serializers.SerializerMethodField()
 
